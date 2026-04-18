@@ -126,7 +126,7 @@ graph TD
 
 下面这张图不是为了表达内容本身，而是用来验证 markdown2img 对文章内本地图片引用的支持：
 
-![Memory in AI Agent Design reference image](</Users/taylorzyx/Library/Mobile Documents/iCloud~md~obsidian/Documents/little-tz/03 Outputs/Writing/2026-03-24_Memory_in_AI_Agent_Design/Pasted image 20260324181632.png>)
+![Memory in AI Agent Design reference image](../../src/assets/default-avatar.png)
 
 ## 设计记忆系统时最容易忽略的细节
 

@@ -13,9 +13,7 @@ metadata:
 
 Use this skill when the task involves the `markdown2img` repository.
 
-Repo root:
-
-`/Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img`
+Run all repo commands from the `markdown2img` repository root.
 
 In-repo skill path:
 

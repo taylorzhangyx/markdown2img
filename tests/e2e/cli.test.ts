@@ -1,7 +1,8 @@
 import { execFile } from 'node:child_process';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -10,7 +11,7 @@ import { LAYOUT } from '../../src/types.js';
 import { readPngDimensions } from '../helpers/png.js';
 
 const execFileAsync = promisify(execFile);
-const REPO_DIR = '/Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img';
+const REPO_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 async function runCli(args: string[]): Promise<{ stdout: string; stderr: string }> {
   return execFileAsync('node', ['dist/cli.js', ...args], { cwd: REPO_DIR, env: process.env, maxBuffer: 10 * 1024 * 1024 });

@@ -74,11 +74,13 @@ It is meant for agents working on this repo/tool, not for generic Markdown rende
 ### Installation / use by agent runtime
 
 #### Hermes
-Install by copying or symlinking the skill folder into Hermes' skills tree:
+Install by copying or symlinking the skill folder into Hermes' skills tree.
+
+Run these commands from the `markdown2img` repo root.
 
 ```bash
 mkdir -p ~/.hermes/skills/software-development
-ln -s /Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img/skills/markdown2img-editorial-rendering \
+ln -s "$(pwd)/skills/markdown2img-editorial-rendering" \
   ~/.hermes/skills/software-development/markdown2img-editorial-rendering
 ```
 
@@ -86,7 +88,7 @@ Or copy instead of symlink:
 
 ```bash
 mkdir -p ~/.hermes/skills/software-development
-cp -R /Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img/skills/markdown2img-editorial-rendering \
+cp -R ./skills/markdown2img-editorial-rendering \
   ~/.hermes/skills/software-development/markdown2img-editorial-rendering
 ```
 
