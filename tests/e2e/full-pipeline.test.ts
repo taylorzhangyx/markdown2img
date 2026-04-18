@@ -10,7 +10,7 @@ import { LAYOUT } from '../../src/types.js';
 import { readPngDimensions } from '../helpers/png.js';
 
 describe('full pipeline e2e', () => {
-  it('writes sequential 1080x1440 PNGs into a timestamped output directory', async () => {
+  it('writes sequential 1080x1800 PNGs into a timestamped output directory', async () => {
     const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-e2e-'));
 
     try {
