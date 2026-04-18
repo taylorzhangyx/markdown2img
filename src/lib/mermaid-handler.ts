@@ -3,6 +3,8 @@ import type { Page } from 'playwright';
 import { Markdown2ImgError } from './error.js';
 
 const MERMAID_TIMEOUT_MS = 15_000;
+const MAX_MERMAID_WIDTH = 920;
+const MAX_MERMAID_HEIGHT = 760;
 
 export async function checkMermaidErrors(page: Page): Promise<string[]> {
   return page.evaluate(() => {
@@ -60,6 +62,32 @@ export async function waitForMermaid(page: Page, timeoutMs = MERMAID_TIMEOUT_MS)
       error instanceof Error ? error.message : String(error),
     );
   }
+
+  await page.evaluate(
+    ({ maxWidth, maxHeight }) => {
+      document.querySelectorAll<HTMLElement>('.block-mermaid').forEach((block) => {
+        const svg = block.querySelector<SVGElement>('svg');
+        if (!svg) {
+          return;
+        }
+
+        const rect = svg.getBoundingClientRect();
+        const scale = Math.min(maxWidth / rect.width, maxHeight / rect.height, 1);
+        const wrapper = svg.parentElement as HTMLElement | null;
+
+        if (wrapper) {
+          wrapper.style.width = `${Math.min(rect.width * scale, maxWidth)}px`;
+          wrapper.style.maxWidth = '100%';
+        }
+
+        svg.style.display = 'block';
+        svg.style.width = `${rect.width * scale}px`;
+        svg.style.height = `${rect.height * scale}px`;
+        svg.style.maxWidth = '100%';
+      });
+    },
+    { maxWidth: MAX_MERMAID_WIDTH, maxHeight: MAX_MERMAID_HEIGHT },
+  );
 
   const errors = await checkMermaidErrors(page);
   if (errors.length > 0) {

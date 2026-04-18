@@ -56,15 +56,26 @@ export function computePageBreaks(measurements: readonly BlockMeasurement[]): Pa
       return;
     }
 
+    const isFirstPage = pageIndex === 0;
+    const topPaddingReserve = isFirstPage
+      ? LAYOUT.PAGE_PADDING + LAYOUT.FIRST_PAGE_IDENTITY
+      : LAYOUT.PAGE_PADDING;
+
+    const firstBlock = currentBlocks[0]!;
+    const lastBlock = currentBlocks[currentBlocks.length - 1]!;
+    const clipY = Math.max(firstBlock.top - topPaddingReserve, 0);
+    const contentBottom = Math.max(lastBlock.top + lastBlock.height - clipY, topPaddingReserve);
+
     pages.push({
       pageIndex,
       blockRange: {
-        start: currentBlocks[0]!.index,
-        end: currentBlocks[currentBlocks.length - 1]!.index,
+        start: firstBlock.index,
+        end: lastBlock.index,
       },
-      clipY: currentBlocks[0]!.top,
+      clipY,
       contentHeight: currentUsed,
-      isFirstPage: pageIndex === 0,
+      contentBottom,
+      isFirstPage,
       isLastPage: options.isLastPage,
       hasEndMarker: options.hasEndMarker,
     });
@@ -107,6 +118,7 @@ export function computePageBreaks(measurements: readonly BlockMeasurement[]): Pa
         blockRange: { start: -1, end: -1 },
         clipY: currentBlocks[currentBlocks.length - 1]!.top + currentBlocks[currentBlocks.length - 1]!.height,
         contentHeight: 0,
+        contentBottom: LAYOUT.PAGE_PADDING,
         isFirstPage: false,
         isLastPage: true,
         hasEndMarker: true,

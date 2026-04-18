@@ -47,4 +47,14 @@ describe('normalizeArticle', () => {
     expect(imageBlock?.type === 'image' ? imageBlock.fileUrl : '').toMatch(/^file:\/\//);
     expect(imageBlock?.type === 'image' ? imageBlock.src : '').toContain('sample.png');
   });
+
+  it('splits consecutive prose lines into readable paragraph-sized blocks for social-style markdown', async () => {
+    const parsed = await parseArticle('tests/fixtures/xiaohongshu-tight-lines.md');
+    const validated = await validateArticle(parsed);
+    const blocks = await normalizeArticle(validated);
+
+    expect(blocks[0]).toMatchObject({ type: 'heading' });
+    expect(blocks.slice(1).every((block) => block.type === 'paragraph')).toBe(true);
+    expect(blocks.length).toBeGreaterThan(6);
+  });
 });

@@ -25,12 +25,12 @@ describe('validateArticle', () => {
     expect(resolvedUrls[0]).toContain('sample.png');
   });
 
-  it('throws validation_error when author_name is missing', async () => {
+  it('applies default author and avatar when author_name is missing', async () => {
     const parsed = await parseArticle('tests/fixtures/missing-author.md');
+    const validated = await validateArticle(parsed);
 
-    await expect(validateArticle(parsed)).rejects.toMatchObject({
-      code: 'validation_error',
-    });
+    expect(validated.meta.author_name).toBe('AI 工程 Tay');
+    expect(validated.meta.avatar_path).toContain('default-avatar.png');
   });
 
   it('throws asset_resolution_error for a missing referenced image', async () => {

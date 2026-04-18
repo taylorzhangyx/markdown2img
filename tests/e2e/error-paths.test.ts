@@ -21,13 +21,12 @@ describe('error paths', () => {
     });
   });
 
-  it('throws validation_error for empty author_name', async () => {
+  it('fills in the default author profile when author_name is empty', async () => {
     const parsed = await parseArticle('tests/fixtures/empty-author.md');
+    const validated = await validateArticle(parsed);
 
-    await expect(validateArticle(parsed)).rejects.toMatchObject({
-      code: 'validation_error',
-      message: 'Missing required frontmatter field: author_name',
-    });
+    expect(validated.meta.author_name).toBe('AI 工程 Tay');
+    expect(validated.meta.avatar_path).toContain('default-avatar.png');
   });
 
   it('throws asset_resolution_error for missing avatar', async () => {
@@ -105,6 +104,7 @@ describe('error paths', () => {
                 blockRange: { start: 0, end: 0 },
                 clipY: 0,
                 contentHeight: 100,
+                contentBottom: 200,
                 isFirstPage: true,
                 isLastPage: true,
                 hasEndMarker: true,

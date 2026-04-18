@@ -30,7 +30,9 @@ describe('renderHtml', () => {
 
     expect(html).toContain('<!DOCTYPE html>');
     expect(html).toContain('--page-width: 1080px;');
-    expect(html).toContain("mermaid.initialize({ startOnLoad: true, theme: 'neutral' });");
+    expect(html).toContain("mermaid.initialize({");
+    expect(html).toContain("theme: 'base'");
+    expect(html).toContain("htmlLabels: false");
     expect(html).toContain('data-block-index="0"');
     expect(html).toContain(`data-block-index="${blocks.length - 1}"`);
     expect(html).toContain('data-block-type="table"');

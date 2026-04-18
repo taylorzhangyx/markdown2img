@@ -97,3 +97,19 @@
 ### Remaining open issues
 - Manual visual inspection of generated PNG aesthetics is still best-effort; automated tests now cover dimensions, sequencing, determinism, cover-page generation, and core error boundaries.
 - Cross-machine pixel-level determinism remains explicitly out of scope per the spec.
+
+## 2026-04-18 00:51:00 CST
+
+### Default author profile configured
+- Added a bundled default avatar at `src/assets/default-avatar.png` and wired `tsup` to copy it into `dist/assets/`.
+- `validateArticle()` now falls back to `author_name: AI 工程 Tay` when frontmatter omits or empties `author_name`.
+- `validateArticle()` now also applies the bundled default avatar when `avatar_path` is omitted.
+- Explicit `avatar_path` values still validate normally and still fail with `asset_resolution_error` if the file is missing.
+
+### Regression coverage updated
+- Updated stage and e2e tests to verify default author/avatar fallback behavior instead of expecting `validation_error` on missing/empty author.
+- Re-ran full verification after updating pagination expectations affected by earlier clip offset changes.
+
+### Verification results
+- `npm test` ✅ — 10 test files passed, 32 tests passed.
+- `npm run build` ✅ — build succeeded and now copies `default-avatar.png` into `dist/assets/`.

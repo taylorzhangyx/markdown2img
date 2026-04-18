@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { Page } from 'playwright';
 
 import { Markdown2ImgError } from '../lib/error.js';
-import { avatarToBase64, toFileUrl } from '../lib/image-handler.js';
+import { avatarToBase64, toBase64DataUri } from '../lib/image-handler.js';
 import { LAYOUT, type ArticleMeta, type PageBreakPlan, type PageSpec } from '../types.js';
 
 interface OverlayMetaPayload {
@@ -76,20 +76,26 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         'z-index:9999',
       ].join(';');
 
+      const pageBackground = getComputedStyle(document.body).backgroundColor || '#111318';
       const makeMask = (style: string): HTMLDivElement => {
         const mask = document.createElement('div');
         mask.style.cssText = style;
         return mask;
       };
 
+      const topContentInset = spec.isFirstPage
+        ? layout.pagePadding + layout.firstPageIdentityReserve
+        : layout.pagePadding;
+      const bottomMaskTop = Math.max(Math.min(spec.contentBottom, layout.pageHeight), 0);
+
       overlay.appendChild(
         makeMask(
-          `position:absolute;top:0;left:0;width:${layout.pageWidth}px;height:${layout.pagePadding}px;background:#fff;`,
+          `position:absolute;top:0;left:0;width:${layout.pageWidth}px;height:${topContentInset}px;background:${pageBackground};`,
         ),
       );
       overlay.appendChild(
         makeMask(
-          `position:absolute;bottom:0;left:0;width:${layout.pageWidth}px;height:${layout.pagePadding}px;background:#fff;`,
+          `position:absolute;top:${bottomMaskTop}px;left:0;width:${layout.pageWidth}px;height:${Math.max(layout.pageHeight - bottomMaskTop, 0)}px;background:${pageBackground};`,
         ),
       );
 
@@ -99,40 +105,66 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
           'position:absolute',
           `top:${layout.pagePadding}px`,
           `left:${layout.pagePadding}px`,
+          `right:${layout.pagePadding}px`,
           'display:flex',
           'align-items:center',
-          'gap:20px',
-          'height:80px',
-          'max-width:920px',
-          'color:#1A1A1A',
+          'justify-content:space-between',
+          'gap:24px',
+          'height:88px',
+          'max-width:936px',
+          'color:#f2ede4',
         ].join(';');
+
+        const leftGroup = document.createElement('div');
+        leftGroup.style.cssText = 'display:flex;align-items:center;gap:18px;min-width:0;';
 
         if (overlayMeta.avatarDataUri) {
           const avatar = document.createElement('img');
           avatar.src = overlayMeta.avatarDataUri;
           avatar.alt = '';
           avatar.style.cssText =
-            'width:80px;height:80px;border-radius:999px;object-fit:cover;flex:0 0 auto;background:#f2f2f2;';
-          identity.appendChild(avatar);
+            'width:64px;height:64px;border-radius:999px;object-fit:cover;flex:0 0 auto;background:#1d222a;border:1px solid rgba(214,179,122,0.18);box-shadow:0 8px 24px rgba(0,0,0,0.24);';
+          leftGroup.appendChild(avatar);
         }
 
         const text = document.createElement('div');
-        text.style.cssText = 'display:flex;align-items:baseline;gap:16px;min-width:0;';
+        text.style.cssText = 'display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:0;';
 
         const author = document.createElement('span');
         author.textContent = overlayMeta.authorName;
-        author.style.cssText =
-          'font-size:36px;font-weight:600;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+        author.style.cssText = [
+          'font-family:Songti SC, STSong, Noto Serif CJK SC, Noto Serif SC, Source Han Serif SC, Source Han Serif CN, serif',
+          'font-size:28px',
+          'font-weight:600',
+          'line-height:1.2',
+          'color:#f2ede4',
+          'white-space:nowrap',
+          'overflow:hidden',
+          'text-overflow:ellipsis',
+        ].join(';');
         text.appendChild(author);
 
         if (overlayMeta.date) {
           const date = document.createElement('span');
           date.textContent = overlayMeta.date;
-          date.style.cssText = 'font-size:30px;color:#666;white-space:nowrap;';
+          date.style.cssText = [
+            'font-family:Songti SC, STSong, Noto Serif CJK SC, Noto Serif SC, Source Han Serif SC, Source Han Serif CN, serif',
+            'font-size:20px',
+            'line-height:1.2',
+            'letter-spacing:0.04em',
+            'color:#b6afa3',
+            'white-space:nowrap',
+          ].join(';');
           text.appendChild(date);
         }
 
-        identity.appendChild(text);
+        leftGroup.appendChild(text);
+        identity.appendChild(leftGroup);
+
+        const rule = document.createElement('div');
+        rule.style.cssText = 'flex:1 1 auto;height:1px;max-width:320px;background:linear-gradient(90deg, rgba(214,179,122,0.28), rgba(214,179,122,0.04));';
+        identity.appendChild(rule);
+
         overlay.appendChild(identity);
       }
 
@@ -147,15 +179,15 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
           'align-items:center',
           'justify-content:center',
           'gap:24px',
-          'color:#666',
+          'color:#b6afa3',
           'font-size:32px',
           'letter-spacing:4px',
         ].join(';');
 
         const leftLine = document.createElement('div');
-        leftLine.style.cssText = 'width:120px;height:1px;background:#E5E7EB;';
+        leftLine.style.cssText = 'width:120px;height:1px;background:rgba(214,179,122,0.22);';
         const rightLine = document.createElement('div');
-        rightLine.style.cssText = 'width:120px;height:1px;background:#E5E7EB;';
+        rightLine.style.cssText = 'width:120px;height:1px;background:rgba(214,179,122,0.22);';
         const text = document.createElement('span');
         text.textContent = 'END';
 
@@ -172,6 +204,7 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         pageWidth: LAYOUT.PAGE_WIDTH,
         pageHeight: LAYOUT.PAGE_HEIGHT,
         pagePadding: LAYOUT.PAGE_PADDING,
+        firstPageIdentityReserve: LAYOUT.FIRST_PAGE_IDENTITY,
       },
     },
   );
@@ -256,6 +289,9 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
 
   await mkdir(outputDir, { recursive: true });
 
+  const coverImageDataUri = toBase64DataUri(meta.cover_image);
+  const avatarDataUri = meta.avatar_path ? avatarToBase64(meta.avatar_path) : undefined;
+
   const coverHtml = [
     '<!DOCTYPE html>',
     '<html lang="en">',
@@ -263,22 +299,44 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
     '  <meta charset="utf-8">',
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     '  <style>',
-    '    html, body { margin: 0; padding: 0; width: 1080px; height: 1440px; overflow: hidden; background: #000; }',
-    '    body { font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", -apple-system, sans-serif; }',
-    '    .cover { position: relative; width: 1080px; height: 1440px; }',
-    '    .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }',
-    '    .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.55) 100%); }',
-    '    .content { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 96px 80px; color: #fff; }',
-    '    .title { font-size: 76px; line-height: 1.18; font-weight: 700; margin: 0 0 28px; text-shadow: 0 4px 18px rgba(0,0,0,0.28); }',
-    '    .author { font-size: 36px; opacity: 0.92; }',
+    '    :root { color-scheme: dark; }',
+    '    html, body { margin: 0; padding: 0; width: 1080px; height: 1440px; overflow: hidden; background: #111318; }',
+    '    body { font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", serif; color: #f2ede4; }',
+    '    .cover { position: relative; width: 1080px; height: 1440px; padding: 92px 72px 88px; background: radial-gradient(circle at top center, rgba(214, 179, 122, 0.08), transparent 34%), linear-gradient(180deg, #161a22 0%, #101318 100%); }',
+    '    .cover::before { content: ""; position: absolute; inset: 36px; border: 1px solid rgba(214, 179, 122, 0.12); border-radius: 40px; pointer-events: none; }',
+    '    .eyebrow { position: relative; z-index: 1; display: flex; align-items: center; gap: 18px; color: #b6afa3; font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase; }',
+    '    .eyebrow::after { content: ""; flex: 1 1 auto; height: 1px; background: linear-gradient(90deg, rgba(214, 179, 122, 0.28), rgba(214, 179, 122, 0.04)); }',
+    '    .hero { position: relative; z-index: 1; margin-top: 44px; display: flex; flex-direction: column; gap: 40px; }',
+    '    .cover-card { position: relative; width: 100%; height: 420px; border-radius: 30px; overflow: hidden; background: linear-gradient(135deg, #232933 0%, #151920 100%); border: 1px solid rgba(214, 179, 122, 0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 26px 60px rgba(0,0,0,0.28); }',
+    '    .cover-card img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.82) contrast(0.92) brightness(0.72); }',
+    '    .cover-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(17,19,24,0.12) 0%, rgba(17,19,24,0.48) 100%); }',
+    '    .title { margin: 0; font-size: 74px; line-height: 1.18; font-weight: 600; letter-spacing: -0.01em; color: #f2ede4; }',
+    '    .meta { display: flex; align-items: center; gap: 18px; margin-top: 20px; }',
+    '    .avatar { width: 64px; height: 64px; border-radius: 999px; object-fit: cover; background: #1d222a; border: 1px solid rgba(214, 179, 122, 0.18); box-shadow: 0 8px 24px rgba(0,0,0,0.24); }',
+    '    .author-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }',
+    '    .author { font-size: 28px; line-height: 1.2; font-weight: 600; color: #f2ede4; }',
+    '    .date { font-size: 20px; line-height: 1.2; letter-spacing: 0.04em; color: #b6afa3; }',
+    '    .dek { margin: 28px 0 0; font-size: 24px; line-height: 1.8; color: #cec5b6; max-width: 860px; }',
     '  </style>',
     '</head>',
     '<body>',
     '  <div class="cover">',
-    `    <img src="${escapeHtml(toFileUrl(meta.cover_image))}" alt="">`,
-    '    <div class="content">',
+    '    <div class="eyebrow">Memory / AI Agent Design</div>',
+    '    <div class="hero">',
+    '      <div class="cover-card">',
+    `        <img src="${escapeHtml(coverImageDataUri)}" alt="">`,
+    '      </div>',
     `      <h1 class="title">${escapeHtml(meta.title.trim() || 'Untitled Article')}</h1>`,
-    `      <div class="author">${escapeHtml(meta.author_name)}</div>`,
+    '      <div class="meta">',
+    avatarDataUri
+      ? `        <img class="avatar" src="${escapeHtml(avatarDataUri)}" alt="">`
+      : '        <div class="avatar"></div>',
+    '        <div class="author-wrap">',
+    `          <div class="author">${escapeHtml(meta.author_name)}</div>`,
+    meta.date ? `          <div class="date">${escapeHtml(meta.date)}</div>` : '          <div class="date"></div>',
+    '        </div>',
+    '      </div>',
+    '      <p class="dek">A warm editorial cover designed for long-form markdown rendering tests, prioritizing readable hierarchy, restrained serif typography, and social-post-friendly composition.</p>',
     '    </div>',
     '  </div>',
     '</body>',

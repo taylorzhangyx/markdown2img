@@ -49,10 +49,16 @@ describe('built CLI', () => {
     });
   });
 
-  it('prints validation_error and exits non-zero for invalid frontmatter', async () => {
-    await expect(runCli(['tests/fixtures/missing-author.md'])).rejects.toMatchObject({
-      code: expect.any(Number),
-      stderr: expect.stringContaining('[ERROR] validation_error:'),
-    });
+  it('fills in the default author profile when author_name is missing', async () => {
+    const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-cli-default-author-'));
+
+    try {
+      const { stdout, stderr } = await runCli(['tests/fixtures/missing-author.md', '-o', baseDir]);
+      expect(stderr).toBe('');
+      expect(stdout).toContain('✓ Parsed: missing-author.md');
+      expect(stdout).toContain('✓ Validated: author_name=AI 工程 Tay');
+    } finally {
+      await rm(baseDir, { recursive: true, force: true });
+    }
   });
 });

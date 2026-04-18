@@ -9,5 +9,5 @@ export default defineConfig({
   sourcemap: true,
   dts: true,
   banner: { js: '#!/usr/bin/env node' },
-  onSuccess: 'mkdir -p dist/templates dist/assets && cp src/templates/theme-default.css dist/templates/theme-default.css && cp src/assets/mermaid.min.js dist/assets/mermaid.min.js',
+  onSuccess: 'mkdir -p dist/templates dist/assets && cp src/templates/theme-default.css dist/templates/theme-default.css && cp src/assets/mermaid.min.js dist/assets/mermaid.min.js && cp src/assets/default-avatar.png dist/assets/default-avatar.png',
 });

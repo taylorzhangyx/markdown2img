@@ -56,7 +56,7 @@ describe('computePageBreaks', () => {
       { start: 13, end: 19 },
       { start: -1, end: -1 },
     ]);
-    expect(plan.pages.map((page) => page.clipY)).toEqual([0, 1080, 2340, 3600]);
+    expect(plan.pages.map((page) => page.clipY)).toEqual([0, 1000, 2260, 3600]);
     expect(plan.pages.at(-1)).toMatchObject({
       isLastPage: true,
       hasEndMarker: true,
@@ -81,7 +81,7 @@ describe('computePageBreaks', () => {
     });
     expect(plan.pages[1]).toMatchObject({
       blockRange: { start: 1, end: 2 },
-      clipY: 900,
+      clipY: 820,
       isLastPage: true,
       hasEndMarker: true,
     });

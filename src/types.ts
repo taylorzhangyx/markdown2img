@@ -45,6 +45,7 @@ export interface PageSpec {
   readonly blockRange: { readonly start: number; readonly end: number };
   readonly clipY: number;
   readonly contentHeight: number;
+  readonly contentBottom: number;
   readonly isFirstPage: boolean;
   readonly isLastPage: boolean;
   readonly hasEndMarker: boolean;
