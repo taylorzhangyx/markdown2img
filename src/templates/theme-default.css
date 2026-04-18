@@ -1,6 +1,6 @@
 :root {
   --page-width: 1080px;
-  --page-height: 1440px;
+  --page-height: 1800px;
   --page-padding: 76px;
   --first-page-identity-reserve: 124px;
   --content-width: 848px;
@@ -38,7 +38,7 @@
   --font-size-h3: 28px;
   --font-size-code: 20px;
   --font-size-code-inline: 18px;
-  --font-size-table: 24px;
+  --font-size-table: 22px;
   --font-size-mermaid: 18px;
 
   --line-height-body: 1.8;
@@ -395,7 +395,7 @@ body {
 .block-table th,
 .block-table td {
   border: 1px solid var(--color-table-border);
-  padding: 13px 16px;
+  padding: 10px 12px;
   text-align: left;
   vertical-align: top;
   word-wrap: break-word;

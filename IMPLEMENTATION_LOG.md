@@ -174,3 +174,25 @@
 
 ### Verification plan
 - Rebuild, rerender, and visually inspect the first body page for a calmer title and more even left/right text edges.
+
+## 2026-04-18 11:31:30 CST
+
+### Pagination cleanup and taller-page pass
+- Fixed screenshot masking in `src/stages/screenshot.ts` so overlay masks use the page's full resolved background (including gradient) instead of only `backgroundColor`, which removed the stray bottom-edge bleed-through text visible on body page 2/3.
+- Added a small bottom-mask overscan when capturing pages so the next block's top edge cannot peek through as a clipped sliver.
+- Increased the canonical page height in `src/types.ts` and theme CSS from `1440` to `1640`, raising usable body capacity from `1280` to `1480` (`1160` to `1360` on the first body page), which gives roughly 3–4 extra lines of content per page and reduced the full article from 11 pages back down to 10.
+- Updated cover rendering and pagination/CLI tests to follow the taller page size.
+
+### Verification results
+- `npm test` ✅ — 10 test files passed, 35 tests passed after updating pagination and CLI expectations.
+- `node dist/cli.js tests/fixtures/agent-memory-design-comprehensive.md -o /tmp/markdown2img-renders` ✅ — rendered 10 PNG pages to `/tmp/markdown2img-renders/20260418-113112`.
+- Visual QA confirmed the previous bottom-edge stray text on page `003.png` is gone, and the later section pages now start cleanly without the earlier clipped/missing-text feeling near the top.
+
+## 2026-04-18 11:36:08 CST
+
+### Taller-page and tighter-table follow-up
+- Increased canonical page height again from `1640` to `1800` in `src/types.ts` and theme CSS, raising usable body capacity to `1640` (`1520` on the first body page) so each page carries about three more lines.
+- Tightened table presentation in `src/templates/theme-default.css` by reducing table font size from `24px` to `22px` and cell padding from `13×16` to `10×12`, making table information read more compactly.
+
+### Verification plan
+- Rebuild, rerender, and visually confirm the taller pages fit more text per image and the table block feels tighter.

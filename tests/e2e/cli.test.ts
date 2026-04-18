@@ -6,6 +6,7 @@ import { promisify } from 'node:util';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { LAYOUT } from '../../src/types.js';
 import { readPngDimensions } from '../helpers/png.js';
 
 const execFileAsync = promisify(execFile);
@@ -36,7 +37,7 @@ describe('built CLI', () => {
 
       const pngs = (await readdir(outputDir!)).filter((file) => file.endsWith('.png')).sort();
       expect(pngs.length).toBeGreaterThan(0);
-      expect(await readPngDimensions(join(outputDir!, pngs[0]!))).toEqual({ width: 1080, height: 1440 });
+      expect(await readPngDimensions(join(outputDir!, pngs[0]!))).toEqual({ width: LAYOUT.PAGE_WIDTH, height: LAYOUT.PAGE_HEIGHT });
     } finally {
       await rm(baseDir, { recursive: true, force: true });
     }

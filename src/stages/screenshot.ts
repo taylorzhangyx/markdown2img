@@ -76,7 +76,9 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         'z-index:9999',
       ].join(';');
 
-      const pageBackground = getComputedStyle(document.body).backgroundColor || '#F5F2EC';
+      const bodyStyle = getComputedStyle(document.body);
+      const pageBackground = bodyStyle.background || bodyStyle.backgroundColor || '#F5F2EC';
+      const maskOverscan = 6;
       const makeMask = (style: string): HTMLDivElement => {
         const mask = document.createElement('div');
         mask.style.cssText = style;
@@ -86,7 +88,7 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
       const topContentInset = spec.isFirstPage
         ? layout.pagePadding + layout.firstPageIdentityReserve
         : layout.pagePadding;
-      const bottomMaskTop = Math.max(Math.min(spec.contentBottom, layout.pageHeight), 0);
+      const bottomMaskTop = Math.max(Math.min(Math.floor(spec.contentBottom - maskOverscan), layout.pageHeight), 0);
 
       overlay.appendChild(
         makeMask(
@@ -297,10 +299,10 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     '  <style>',
     '    :root { color-scheme: light; }',
-    '    html, body { margin: 0; padding: 0; width: 1080px; height: 1440px; overflow: hidden; background: #F5F2EC; }',
+    `    html, body { margin: 0; padding: 0; width: ${LAYOUT.PAGE_WIDTH}px; height: ${LAYOUT.PAGE_HEIGHT}px; overflow: hidden; background: #F5F2EC; }`,
     '    body { font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", serif; color: #1F2328; }',
     '    * { box-sizing: border-box; }',
-    '    .cover { position: relative; width: 1080px; height: 1440px; padding: 84px 76px 88px; background: linear-gradient(180deg, #F7F4EF 0%, #F4F1EA 100%); }',
+    `    .cover { position: relative; width: ${LAYOUT.PAGE_WIDTH}px; height: ${LAYOUT.PAGE_HEIGHT}px; padding: 84px 76px 88px; background: linear-gradient(180deg, #F7F4EF 0%, #F4F1EA 100%); }`,
     '    .cover::before { content: ""; position: absolute; inset: 34px; border: 1px solid rgba(95, 86, 76, 0.12); border-radius: 32px; pointer-events: none; }',
     '    .eyebrow { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; color: #7A746C; font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif; font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; }',
     '    .eyebrow::after { content: ""; flex: 1 1 auto; height: 1px; background: linear-gradient(90deg, rgba(95, 86, 76, 0.16), rgba(95, 86, 76, 0.03)); }',

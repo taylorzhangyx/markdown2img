@@ -49,24 +49,23 @@ describe('computePageBreaks', () => {
 
     const plan = computePageBreaks(measurements);
 
-    expect(plan.pages).toHaveLength(4);
+    expect(plan.pages).toHaveLength(3);
     expect(plan.pages.map((page) => page.blockRange)).toEqual([
-      { start: 0, end: 5 },
-      { start: 6, end: 12 },
-      { start: 13, end: 19 },
-      { start: -1, end: -1 },
+      { start: 0, end: 7 },
+      { start: 8, end: 16 },
+      { start: 17, end: 19 },
     ]);
-    expect(plan.pages.map((page) => page.clipY)).toEqual([0, 1000, 2260, 3600]);
+    expect(plan.pages.map((page) => page.clipY)).toEqual([0, 1360, 2980]);
     expect(plan.pages.at(-1)).toMatchObject({
       isLastPage: true,
       hasEndMarker: true,
-      contentHeight: 0,
+      contentHeight: 540,
     });
   });
 
   it('moves an orphan heading to the next page', () => {
     const measurements = buildMeasurements([
-      { type: 'paragraph', height: 900 },
+      { type: 'paragraph', height: 1150 },
       { type: 'heading', height: 200 },
       { type: 'paragraph', height: 200 },
     ]);
@@ -76,12 +75,12 @@ describe('computePageBreaks', () => {
     expect(plan.pages).toHaveLength(2);
     expect(plan.pages[0]).toMatchObject({
       blockRange: { start: 0, end: 0 },
-      contentHeight: 900,
+      contentHeight: 1150,
       hasEndMarker: false,
     });
     expect(plan.pages[1]).toMatchObject({
       blockRange: { start: 1, end: 2 },
-      clipY: 820,
+      clipY: 1070,
       isLastPage: true,
       hasEndMarker: true,
     });
@@ -105,7 +104,7 @@ describe('computePageBreaks', () => {
   });
 
   it('creates a dedicated END-marker page when the final page has no room left', () => {
-    const measurements = buildMeasurements([{ type: 'paragraph', height: 1100 }]);
+    const measurements = buildMeasurements([{ type: 'paragraph', height: 1450 }]);
 
     const plan = computePageBreaks(measurements);
 
@@ -117,7 +116,7 @@ describe('computePageBreaks', () => {
     });
     expect(plan.pages[1]).toMatchObject({
       blockRange: { start: -1, end: -1 },
-      clipY: 1100,
+      clipY: 1450,
       contentHeight: 0,
       isLastPage: true,
       hasEndMarker: true,
