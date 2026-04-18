@@ -428,3 +428,66 @@
 - `node dist/cli.js '/Users/taylorzyx/Library/Mobile Documents/iCloud~md~obsidian/Documents/little-tz/03 Outputs/Writing/2026-04-16 - 从 Prompt 到 Passport：为什么高能力 AI 产品最终会走向身份门控 - 小红书版 - 精修版.md' -o /tmp/markdown2img-renders` ✅ — rendered 5 pages to `/tmp/markdown2img-renders/20260418-172014` for direct article QA.
 - Visual QA on `/tmp/markdown2img-renders/20260418-172014/002.png`, `003.png`, and `004.png` found stronger small-screen readability, preserved editorial tone, and still-solid Chinese/English line alignment, with the main remaining trade-off being slightly darker text blocks and long English phrases still reading as distinct texture islands.
 
+## 2026-04-18 23:09:29 CST
+
+### Body folio + post-content END pass
+- Extended `PageSpec` in `src/types.ts` with `bodyPageNumber` and `bodyPageCount`, and added `LAYOUT.END_MARKER_OFFSET = 72` so the overlay has an explicit contract for body-logical folios and post-content END placement.
+- Updated `src/stages/paginate.ts` to populate body-page numbering for every body page, including synthetic final END-only pages when pagination still needs a dedicated closing page.
+- Added `tests/stages/screenshot.test.ts` and exported `getBodyFolioLabel()` / `computeEndMarkerTop()` from `src/stages/screenshot.ts` so the new overlay behavior is covered by focused unit tests instead of being validated only through manual PNG review.
+- Updated `src/stages/screenshot.ts` to render a quiet bottom-right serif folio on every body page and to place the final `END` marker at a fixed offset after `spec.contentBottom` with clamping, rather than pinning it to the page footer.
+
+### Verification results
+- `npm test -- --run tests/stages/paginate.test.ts tests/stages/screenshot.test.ts` ✅ — 2 test files passed, 10 tests passed.
+- `npm test -- --run tests/stages/paginate.test.ts tests/stages/screenshot.test.ts tests/e2e/full-pipeline.test.ts` ✅ — 3 test files passed, 13 tests passed.
+- `npm run build` ✅ — rebuilt the bundled CLI after the folio/END overlay change.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rendered 7 pages to `/tmp/markdown2img-renders/20260418-230830` for representative long-form QA.
+- Visual QA on `/tmp/markdown2img-renders/20260418-230830/002.png` confirmed a quiet bottom-right body folio (`1`) that reads like an editorial page number rather than UI pagination.
+- Visual QA on `/tmp/markdown2img-renders/20260418-230830/007.png` confirmed the last body page still shows its folio (`6`) while `END` now sits after the final article content instead of being anchored to the bottom footer.
+
+## 2026-04-18 23:43:00 CST
+
+### Discovered list-intro heuristic affecting editorial tone
+- Confirmed that the line `一条好的历史记录，至少要回答四件事：` is **not** being treated as a heading level. It is a normal paragraph that receives a special `list-intro` role in `src/stages/render-html.ts`.
+- The exact current rule is: if a block is a paragraph, the **next** block is a list, and the paragraph text ends with `：` or `:`, `getBlockRole()` assigns `list-intro`.
+- When that happens, the following list receives `list-cluster`, and the theme gives both blocks extra styling in `src/templates/theme-default.css`.
+- This means the emphasized look is indeed an **extra handling path**, not obvious plain-Markdown behavior. That explains why the rendered result can surprise the author if they were not aware the renderer promotes colon-ended lead-in paragraphs before lists.
+
+## 2026-04-19 00:15:19 CST
+
+### Refined `list-intro` to behave like prose, not a label
+- Updated `src/templates/theme-default.css` so `.block-paragraph.block-role-list-intro p` now uses the serif body stack instead of the UI sans stack.
+- Raised `list-intro` to the same size as body text via `font-size: var(--font-size-body)` so the lead-in line no longer reads like a small caption or component label.
+- Kept mild emphasis through slightly heavier weight (`560`), a slightly warm dark-brown text color (`#5e5144`), and a modest line-height (`1.58`) while removing the previous tracking-based label feel.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the `list-intro` typography change.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rendered 8 pages to `/tmp/markdown2img-renders/20260419-001445` for regression QA.
+- Visual QA on `/tmp/markdown2img-renders/20260419-001445/005.png` confirmed that `一条好的历史记录，至少要回答四件事：` now reads much closer to an editorial prose lead-in: serif, body-sized, slightly warm, and less like a detached label.
+- User review outcome: this round is accepted as a stopping point for now; no further refinement is needed in this batch.
+
+## 2026-04-19 00:29:03 CST
+
+### Implemented first-batch CLI override and output workflow parameters
+- Added runtime option types in `src/types.ts` and threaded them through the pipeline so CLI invocations can override metadata and output behavior without mutating source Markdown.
+- Updated `src/stages/validate.ts` so runtime overrides can replace `author_name`, `avatar_path`, `date`, and `cover_summary`, while still preserving existing asset validation and fallback behavior.
+- Reworked `src/lib/fs-utils.ts` to support both timestamped output mode (`-o`) and fixed-directory output mode (`--output-dir`), including numbered-PNG cleanup when `--overwrite` is enabled.
+- Updated `src/pipeline.ts` to accept structured options, honor `coverOnly`, return richer result metadata (`outputMode`, `pageCount`, `renderedCover`, `renderedBody`), and route log output through an injected logger for JSON-friendly CLI behavior.
+- Expanded `src/cli.ts` with the first-batch parameters: `--cover-summary`, `--author-name`, `--avatar-path`, `--date`, `--output-dir`, `--overwrite`, `--cover-only`, and `--json`, plus validation for unsupported flag combinations.
+- Added/updated tests in `tests/lib/fs-utils.test.ts`, `tests/stages/validate.test.ts`, `tests/e2e/full-pipeline.test.ts`, and `tests/e2e/cli.test.ts` to cover fixed output directories, overwrite cleanup, runtime metadata overrides, cover-only rendering, and JSON CLI output.
+- Updated `README.md` and the markdown2img editorial skill to reflect the newly implemented CLI workflow so docs and agent guidance no longer describe the old no-overrides state.
+
+### Verification results
+- `npm test -- --run tests/lib/fs-utils.test.ts tests/stages/validate.test.ts tests/e2e/full-pipeline.test.ts tests/e2e/cli.test.ts` ✅ — 4 test files passed, 16 tests passed.
+- `npm run build` ✅ — rebuilt the bundled CLI after adding the parameter plumbing.
+- `node dist/cli.js tests/fixtures/basic-article.md --output-dir <tmpdir> --overwrite --author-name 'AI工程Tay' --cover-summary 'CLI override summary' --cover-only --json` ✅ — verified fixed-directory output, metadata override handling, cover-only mode, and JSON result payload in one end-to-end CLI run.
+
+## 2026-04-19 06:40:00 CST
+
+### Expanded README workflow recipes for the new CLI surface
+- Reorganized `README.md` so the first-batch CLI parameters now have a dedicated recipe section instead of only a short flag list.
+- Added concrete use cases for timestamped local review, fixed-directory publish overwrite, cover-only editorial iteration, automation/JSON workflows, and one-run metadata override without frontmatter edits.
+- Kept examples repo-portable by using neutral relative paths rather than user-specific absolute paths.
+
+### Verification results
+- Reviewed the updated `README.md`, `docs/architecture.md`, `docs/technical.md`, and `skills/markdown2img-editorial-rendering/SKILL.md` together to confirm the documented CLI semantics now align on output modes, override precedence, `--json` behavior, and direct overwrite workflow.
+

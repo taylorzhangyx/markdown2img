@@ -9,7 +9,7 @@ The project is optimized for long-form technical/editorial writing that starts i
 The current renderer produces:
 - a **summary-led cover page**
 - a sequence of **content pages at `1080×1800`**
-- deterministic PNG output in a timestamped directory
+- deterministic PNG output in either a timestamped directory or a fixed output directory
 - browser-measured pagination using Playwright + Chromium
 
 The visual system is currently a warm, light, editorial reading theme with:
@@ -47,6 +47,89 @@ npm run build
 ```bash
 node dist/cli.js article.md -o ./output
 ```
+
+### Common workflow-oriented CLI flags
+
+```bash
+# Directly overwrite a fixed publish directory
+node dist/cli.js article.md --output-dir ./publish --overwrite
+
+# Override cover/identity metadata without editing the source markdown
+node dist/cli.js article.md \
+  --cover-summary "Override summary" \
+  --author-name "AI工程Tay" \
+  --avatar-path ./assets/avatar.png \
+  --date 2026-04-19
+
+# Render only the cover and print machine-readable JSON
+node dist/cli.js article.md --cover-only --json --output-dir ./preview --overwrite
+```
+
+Supported runtime override flags:
+- `--cover-summary <text>`
+- `--author-name <text>`
+- `--avatar-path <path>`
+- `--date <text>`
+- `--output-dir <dir>`
+- `--overwrite`
+- `--cover-only`
+- `--json`
+
+### Workflow recipes
+
+#### 1. Normal timestamped render for local review
+
+```bash
+node dist/cli.js article.md -o ./output
+```
+
+Use this when you want each render preserved in its own timestamped directory.
+
+#### 2. Overwrite a fixed publish directory
+
+```bash
+node dist/cli.js article.md --output-dir ./publish --overwrite
+```
+
+Use this when another tool or platform already watches a stable folder like `./publish/001.png`, `./publish/002.png`, ...
+
+#### 3. Iterate only on cover copy and identity
+
+```bash
+node dist/cli.js article.md \
+  --cover-summary "真正让高能力 Agent 在生产环境里失效的，往往不是模型，而是上下文污染、工具背压和观测断裂。" \
+  --author-name "AI工程Tay" \
+  --avatar-path ./assets/avatar.png \
+  --date 2026-04-19 \
+  --cover-only \
+  --output-dir ./cover-preview \
+  --overwrite
+```
+
+Use this when you want fast editorial iteration on the cover without rerendering body pages.
+
+#### 4. Run from automation and parse machine-readable output
+
+```bash
+node dist/cli.js article.md \
+  --output-dir ./render-out \
+  --overwrite \
+  --json
+```
+
+Use this when an agent, shell script, or CI step needs stable stdout JSON and can read progress logs from stderr.
+
+#### 5. Override metadata for one run without editing frontmatter
+
+```bash
+node dist/cli.js article.md \
+  --author-name "AI工程Tay" \
+  --avatar-path ./assets/avatar.png \
+  --date 2026-04-19 \
+  --cover-summary "Override summary"
+```
+
+Use this when the source Markdown should stay untouched but the exported cards need run-specific cover/identity data.
 
 Execution model note:
 - the repo workflow is **build first, then run the built CLI**
@@ -197,6 +280,7 @@ theme: default
 
 ### Current cover behavior
 - the cover is generated even without `cover_image`
+- CLI `--cover-summary` overrides frontmatter-derived cover summary when provided
 - `cover_summary` is preferred when provided
 - if `cover_summary` is missing, the validator derives one from:
   1. `summary`
@@ -205,8 +289,16 @@ theme: default
 - cover summary text is normalized and length-limited before rendering
 
 ### Current metadata fallback behavior
+- CLI `--author-name`, `--avatar-path`, and `--date` override frontmatter when supplied
 - if `avatar_path` is omitted, the pipeline uses the bundled default avatar
 - if `author_name` is omitted or blank, validation currently falls back to a placeholder author string instead of failing hard
+
+### Output modes
+- `-o, --output <dir>` keeps the original timestamped behavior and writes into `<dir>/<timestamp>/`
+- `--output-dir <dir>` writes directly into that exact directory
+- `--overwrite` clears existing numbered PNGs in `--output-dir` before rendering
+- `--cover-only` renders only the cover page
+- `--json` prints structured result data for automation workflows
 
 ---
 
@@ -251,22 +343,44 @@ This changed intentionally to make Chromium rendering more robust inside the `pa
 
 ## Output
 
-Each run creates a timestamped directory:
+The renderer now supports two output modes:
+
+### Timestamped mode
+Used by default and by `-o, --output <dir>`.
 
 ```text
-YYYYMMDD-HHmmss/
+<base-dir>/YYYYMMDD-HHmmss/
   001.png
   002.png
   003.png
   ...
 ```
 
-Current output rules:
+Rules:
+- default base directory is the source Markdown file's directory
+- `-o, --output <dir>` changes the base directory but still creates a timestamped child folder
+
+### Fixed-directory mode
+Used by `--output-dir <dir>`.
+
+```text
+<exact-output-dir>/
+  001.png
+  002.png
+  003.png
+  ...
+```
+
+Rules:
+- files are written directly into the exact directory you pass
+- `--overwrite` removes existing numbered PNGs (`001.png`, `002.png`, ...) in that directory before rendering
+- `--overwrite` is valid only with `--output-dir`
+
+Current output rules shared by both modes:
 - every page is exactly `1080×1800`
 - `001.png` is the dedicated cover page
 - content pages start after the cover
 - the last content page may include an `END` marker
-- output is written next to the source file unless `-o` is provided
 
 ---
 
@@ -280,7 +394,15 @@ markdown2img <input> [options]
 - `<input>`: source Markdown file
 
 ### Options
-- `-o, --output <dir>`: output base directory
+- `-o, --output <dir>`: output base directory for timestamped child-dir mode
+- `--output-dir <dir>`: write directly into this exact output directory
+- `--overwrite`: remove existing numbered PNGs in `--output-dir` before rendering
+- `--cover-only`: render only the cover page
+- `--author-name <text>`: override `author_name` at runtime
+- `--avatar-path <path>`: override `avatar_path` at runtime
+- `--date <text>`: override `date` at runtime
+- `--cover-summary <text>`: override cover summary derivation at runtime
+- `--json`: print machine-readable JSON to stdout and route progress logs to stderr
 - `-h, --help`: help
 - `-V, --version`: version
 
@@ -292,6 +414,16 @@ node dist/cli.js tests/fixtures/full-article.md -o /tmp/markdown2img-check
 
 ```bash
 node dist/cli.js article.md
+```
+
+```bash
+node dist/cli.js article.md \
+  --output-dir ./publish \
+  --overwrite \
+  --author-name "AI工程Tay" \
+  --cover-summary "CLI override summary" \
+  --cover-only \
+  --json
 ```
 
 ---

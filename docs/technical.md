@@ -67,6 +67,25 @@ Current normalized metadata shape:
 - `cover_image?: string`
 - `cover_summary?: string`
 
+## RuntimeMetaOverrides
+Optional per-run metadata override shape:
+- `authorName?: string`
+- `avatarPath?: string`
+- `date?: string`
+- `coverSummary?: string`
+
+These are passed from the CLI into validation so one render can override identity/cover metadata without editing frontmatter.
+
+## PipelineOptions
+Current pipeline option shape includes:
+- `outputBase?: string`
+- `outputDir?: string`
+- `overwrite?: boolean`
+- `coverOnly?: boolean`
+- `json?: boolean`
+- `metaOverrides?: RuntimeMetaOverrides`
+- `log?: (line: string) => void`
+
 ## ValidatedArticle
 Produced after metadata derivation and asset resolution.
 
@@ -102,6 +121,8 @@ Important detail:
 - `contentBottom`
 - first/last page flags
 - END-marker flag
+- `bodyPageNumber`
+- `bodyPageCount`
 
 ---
 
@@ -117,6 +138,7 @@ USABLE_HEIGHT = 1640
 FIRST_PAGE_IDENTITY = 120
 FIRST_PAGE_USABLE = 1520
 END_MARKER_HEIGHT = 120
+END_MARKER_OFFSET = 72
 ```
 
 These values affect:
@@ -142,18 +164,44 @@ These values affect:
 
 ### Current derivation rules
 `cover_summary` is derived in this order:
-1. `cover_summary`
-2. `summary`
-3. first non-image paragraph
-4. title
+1. runtime `coverSummary` override
+2. `cover_summary`
+3. `summary`
+4. first non-image paragraph
+5. title
 
 Summary text is normalized and truncated to bounded length.
+
+Other metadata precedence:
+- `author_name`: runtime `authorName` override → frontmatter `author_name` → placeholder fallback
+- `avatar_path`: runtime `avatarPath` override → frontmatter `avatar_path` → bundled default avatar
+- `date`: runtime `date` override → frontmatter `date`
 
 ### Current asset rules
 - referenced local images must exist
 - `avatar_path` must exist if provided
+- runtime `avatarPath` follows the same source-directory-relative resolution rule as frontmatter `avatar_path`
 - otherwise the default bundled avatar is used
 - `cover_image` is validated if provided, even though the active cover renderer is summary-led
+
+---
+
+## Output contract
+
+The renderer supports two output modes:
+
+### Timestamped mode
+- default when neither `--output-dir` nor `-o` is provided
+- also used by `-o, --output <dir>`
+- output directory shape: `<base-dir>/<yyyyMMdd-HHmmss>/`
+
+### Fixed-directory mode
+- enabled by `--output-dir <dir>`
+- output directory shape: exactly the provided directory
+- `--overwrite` removes only numbered PNGs matching `^\d{3}\.png$` before rendering
+- `--overwrite` is invalid without `--output-dir`
+
+`prepareOutputDir()` in `src/lib/fs-utils.ts` owns this contract.
 
 ---
 
@@ -195,6 +243,7 @@ Behavior notes:
 - END marker is appended to the last page if there is enough room
 - otherwise the system may generate a dedicated final END page
 - there is no line-level splitting of paragraphs/code blocks
+- body pages also carry logical folio metadata (`bodyPageNumber`, `bodyPageCount`) so the screenshot overlay can render quiet page numbers independent of output filenames
 
 ---
 
@@ -267,6 +316,40 @@ CLI behavior:
 - success exits with `0`
 - failure exits with `1`
 - structured errors are printed in a stable human-readable format
+
+---
+
+## CLI contract
+
+Current options:
+- `-o, --output <dir>`
+- `--output-dir <dir>`
+- `--overwrite`
+- `--cover-only`
+- `--author-name <text>`
+- `--avatar-path <path>`
+- `--date <text>`
+- `--cover-summary <text>`
+- `--json`
+- `-h, --help`
+- `-V, --version`
+
+Validation rules currently enforced in `src/cli.ts`:
+- `--output` and `--output-dir` cannot be used together
+- `--overwrite` requires `--output-dir`
+
+`--json` behavior:
+- structured result JSON is written to stdout
+- progress logs are routed to stderr
+- on non-JSON runs, progress logs go to stdout
+
+Current JSON result shape returned from the pipeline:
+- `outputMode: 'timestamped' | 'fixed'`
+- `outputDir: string`
+- `files: string[]`
+- `pageCount: number`
+- `renderedCover: boolean`
+- `renderedBody: boolean`
 
 ---
 

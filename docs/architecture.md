@@ -31,11 +31,13 @@ The implementation favors determinism and debuggability over configurability.
 ### Entry and orchestration
 - `src/cli.ts`
   - command-line interface
+  - CLI option validation and JSON/human output routing
   - error formatting and process exit codes
 - `src/pipeline.ts`
   - orchestration of the full rendering flow
   - browser/page lifecycle
-  - output directory creation
+  - output directory preparation for timestamped or fixed-dir mode
+  - runtime metadata override plumbing
 
 ### Core stages
 - `src/stages/parse.ts`
@@ -104,6 +106,7 @@ Responsibilities:
 
 Input:
 - `ParsedArticle`
+- optional runtime metadata overrides from CLI
 
 Output:
 - `ValidatedArticle`
@@ -112,13 +115,16 @@ Responsibilities:
 - read accepted frontmatter fields
 - resolve local asset paths
 - derive `cover_summary`
+- apply runtime overrides for `author_name`, `avatar_path`, `date`, and `cover_summary`
 - inject default avatar when omitted
 - normalize metadata into `ArticleMeta`
 - fail early when referenced local assets are missing
 
 Important current behavior:
+- CLI runtime overrides win over frontmatter when provided
 - `author_name` currently falls back to a placeholder instead of failing hard
 - `cover_summary` may come from explicit frontmatter, `summary`, first paragraph, or title
+- runtime `avatar_path` is resolved relative to the source Markdown directory, just like frontmatter `avatar_path`
 - `cover_image` is still accepted/validated for compatibility, but the active cover design is summary-led
 
 ---
@@ -238,6 +244,7 @@ Instead it:
 Overlay responsibilities:
 - hide content outside the current page frame
 - inject first-page identity row on content page 1
+- inject quiet bottom-right body folios on body pages
 - inject END marker on the last page
 
 ---
@@ -253,6 +260,7 @@ Current layout constants live in `src/types.ts`:
 - `FIRST_PAGE_IDENTITY = 120`
 - `FIRST_PAGE_USABLE = 1520`
 - `END_MARKER_HEIGHT = 120`
+- `END_MARKER_OFFSET = 72`
 
 These constants are coupled to:
 - pagination math
@@ -374,6 +382,29 @@ Bundled assets currently include:
 - `src/assets/fonts/NotoSerifSC-OFL.txt`
 
 `tsup.config.ts` copies these assets into `dist/` after build.
+
+---
+
+## CLI workflow architecture
+
+The CLI now has two workflow layers on top of the rendering pipeline.
+
+### Runtime metadata override layer
+- `--cover-summary`
+- `--author-name`
+- `--avatar-path`
+- `--date`
+
+These let the caller change cover/identity metadata for one run without mutating source Markdown frontmatter.
+
+### Output and automation layer
+- `-o, --output <dir>` keeps the original timestamped child-directory behavior
+- `--output-dir <dir>` writes directly into a fixed target directory
+- `--overwrite` clears numbered PNGs only in fixed-directory mode
+- `--cover-only` short-circuits body rendering after the cover is captured
+- `--json` keeps result data machine-readable by sending structured JSON to stdout and progress logs to stderr
+
+Architecturally, `src/cli.ts` owns user-facing option validation and I/O semantics, while `src/pipeline.ts` and the stage modules own rendering behavior.
 
 ---
 

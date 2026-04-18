@@ -49,9 +49,12 @@ Do not use this skill for:
 Do **not** rely on older assumptions. Current confirmed behavior:
 - page size is **1080×1800**, not 1080×1440
 - the cover is **summary-led**, not image-led title-cover by default
+- cover main text comes from frontmatter/content derivation, but the CLI can now override it with `--cover-summary`
+- the CLI now supports dedicated runtime overrides for `cover_summary`, `author_name`, `avatar_path`, and `date`
+- the CLI also supports `--output-dir`, `--overwrite`, `--cover-only`, and `--json` for publish-folder and automation workflows
 - body/article images are embedded as **base64 data URIs**, not `file://` URLs
 - the cover uses bundled **Noto Serif SC** via `@font-face`
-- output is a timestamped directory of PNG files
+- output can now be either timestamped (`-o`) or fixed-directory (`--output-dir`)
 - visual QA on rendered PNGs is part of correctness
 
 Key docs to check before major work:
@@ -342,13 +345,14 @@ Recommended workflow:
 1. Resolve the active vault first (`obsidian-cli print-default --path-only`) instead of guessing the vault path.
 2. Locate the exact source note with `search_files(target='files')` using the article title/path.
 3. Inspect whether the existing exported PNGs already live next to the note or in the intended target directory. Do not assume their location.
-4. Render to a temp output base first, e.g. `/tmp/markdown2img-renders`, and capture the exact timestamped output directory.
-5. Only after the render succeeds, delete/replace the target `001.png`, `002.png`, ... files in the intended directory.
-6. Verify replacement by listing the numbered PNGs and checking that the expected files exist with non-zero sizes.
+4. If the target is a known publish directory, prefer `--output-dir <target> --overwrite` for direct in-place regeneration.
+5. If the target is uncertain or risky, render to a temp output base first, e.g. `/tmp/markdown2img-renders`, and capture the exact timestamped output directory.
+6. Only if you used the temp-output path, replace the target `001.png`, `002.png`, ... files after the render succeeds.
+7. Verify replacement by listing the numbered PNGs and checking that the expected files exist with non-zero sizes.
 
 Why this workflow matters:
-- the CLI writes into a new timestamped directory, so direct in-place overwrite is not the native behavior
-- rendering to temp first prevents partial replacement if the render fails
+- `--output-dir` + `--overwrite` is now the native direct-overwrite path for publish-folder workflows
+- rendering to temp first is still safer when the destination is ambiguous or when you want a manual review checkpoint before replacement
 - users may refer to “original img files” loosely, so target discovery must happen before deletion/copying
 
 ---
