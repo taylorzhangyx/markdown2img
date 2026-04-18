@@ -303,3 +303,28 @@
 - `npm run build` ✅ — rebuilt the bundled CLI after the new cover font-stack / size changes.
 - `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-145033`.
 - Visual QA on `001.png` confirmed the summary is visibly larger and heavier, the mixed serif stack feels more mature and trustworthy, and the quote is larger; remaining issues now come more from text-block density than from font choice direction.
+
+## 2026-04-18 15:01:09 CST
+
+### Official Chinese cover font integration pass
+- Rechecked the cover font mismatch and concluded the remaining disharmony came less from size and more from mixing `Iowan Old Style` with `Source Han Serif` on the same summary block.
+- Switched the cover to an official bundled font from Google Fonts / Noto: downloaded `NotoSerifSC[wght].ttf` (plus the OFL license file) into `src/assets/fonts/` so the cover now uses one coherent serif family for both Chinese and inline Latin glyphs.
+- Updated `src/stages/screenshot.ts` to register the bundled font via `@font-face`, use it for the cover summary and author line, and explicitly wait for `document.fonts.ready` before capturing the cover screenshot.
+- Updated `tsup.config.ts` so the bundled font files are copied into `dist/assets/fonts/` during build, keeping the packaged CLI render path consistent.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the Noto Serif SC integration.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-150006`.
+- Visual QA on `001.png` confirmed the Chinese/English cover typography now feels more unified and official-looking; the main remaining issue is cover text density rather than font mismatch.
+
+## 2026-04-18 15:25:32 CST
+
+### Cover text-density relaxation pass
+- Kept the bundled official `Noto Serif SC` cover font, but reduced the cover summary’s visual pressure by increasing line-height, slightly lowering the effective font-weight, and tightening the autosize range so the cover stops maximizing into an overly dense statement block.
+- Adjusted the summary stage/frame geometry in `src/stages/screenshot.ts` to give the quote block a bit more breathing room and a calmer vertical placement while preserving the same quote-led editorial structure.
+- Softened the quote mark scale/offset slightly so it stays integrated with the paragraph without feeling as heavy as the previous denser version.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the cover density adjustments.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-152430`.
+- Visual QA on `001.png` confirmed the cover now feels less dense and still trustworthy/editorial; the main remaining refinement opportunity is line-break rhythm rather than block pressure.

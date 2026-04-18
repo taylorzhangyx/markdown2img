@@ -1,11 +1,32 @@
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { Page } from 'playwright';
 
 import { Markdown2ImgError } from '../lib/error.js';
 import { avatarToBase64 } from '../lib/image-handler.js';
 import { LAYOUT, type ArticleMeta, type PageBreakPlan, type PageSpec } from '../types.js';
+
+const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+
+function resolveAssetPath(...relativeCandidates: string[]): string {
+  for (const candidate of relativeCandidates) {
+    const absolutePath = resolve(MODULE_DIR, candidate);
+    if (existsSync(absolutePath)) {
+      return absolutePath;
+    }
+  }
+
+  throw new Error(`Unable to resolve bundled asset from candidates: ${relativeCandidates.join(', ')}`);
+}
+
+const COVER_SERIF_FONT_PATH = resolveAssetPath(
+  '../assets/fonts/NotoSerifSC[wght].ttf',
+  './assets/fonts/NotoSerifSC[wght].ttf',
+);
+const COVER_SERIF_FONT_URL = pathToFileURL(COVER_SERIF_FONT_PATH).toString();
 
 interface OverlayMetaPayload {
   authorName: string;
@@ -299,19 +320,20 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
     '  <style>',
     '    :root { color-scheme: light; }',
     `    html, body { margin: 0; padding: 0; width: ${LAYOUT.PAGE_WIDTH}px; height: ${LAYOUT.PAGE_HEIGHT}px; overflow: hidden; background: #F5F2EC; }`,
-    '    body { font-family: "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", serif; color: #1F2328; }',
+    `    @font-face { font-family: "CoverNotoSerifSC"; src: url("${escapeHtml(COVER_SERIF_FONT_URL)}") format("truetype"); font-weight: 200 900; font-style: normal; font-display: block; }`,
+    '    body { font-family: "CoverNotoSerifSC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif; color: #1F2328; }',
     '    * { box-sizing: border-box; }',
     `    .cover { position: relative; width: ${LAYOUT.PAGE_WIDTH}px; height: ${LAYOUT.PAGE_HEIGHT}px; padding: 84px 76px 88px; background: linear-gradient(180deg, #F7F4EF 0%, #F4F1EA 100%); }`,
     '    .cover::before { content: ""; position: absolute; inset: 34px; border: 1px solid rgba(95, 86, 76, 0.12); border-radius: 32px; pointer-events: none; }',
     '    .content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }',
-    '    .summary-stage { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 0 0 76px; }',
-    '    .summary-frame { position: relative; width: min(904px, calc(100% - 8px)); max-height: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }',
-    '    .summary { --summary-font-size: 50px; position: relative; margin: 0; width: 100%; padding-left: 42px; color: #4C3E2F; font-family: "Iowan Old Style", "Source Han Serif CN SemiBold", "Source Han Serif CN", "Source Han Serif SC", "Songti SC", "STSong", "Noto Serif CJK SC", serif; font-size: var(--summary-font-size); font-weight: 600; line-height: 1.54; letter-spacing: 0; text-align: justify; text-justify: inter-ideograph; }',
-    '    .summary::before { content: "“"; position: absolute; left: -14px; top: -30px; color: rgba(184, 132, 71, 0.9); font-size: clamp(78px, calc(var(--summary-font-size) * 1.9), 118px); line-height: 0.8; }',
+    '    .summary-stage { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 18px 0 96px; }',
+    '    .summary-frame { position: relative; width: min(888px, calc(100% - 20px)); max-height: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }',
+    '    .summary { --summary-font-size: 48px; position: relative; margin: 0; width: 100%; padding-left: 42px; color: #4C3E2F; font-family: "CoverNotoSerifSC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif; font-size: var(--summary-font-size); font-weight: 580; line-height: 1.66; letter-spacing: 0; text-align: justify; text-justify: inter-ideograph; }',
+    '    .summary::before { content: "“"; position: absolute; left: -14px; top: -24px; color: rgba(184, 132, 71, 0.9); font-size: clamp(74px, calc(var(--summary-font-size) * 1.8), 112px); line-height: 0.8; }',
     '    .identity { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 16px; color: #5C4C3C; }',
     '    .avatar { width: 60px; height: 60px; border-radius: 999px; object-fit: cover; background: #ECE5DA; border: 1px solid rgba(95, 86, 76, 0.12); }',
     '    .identity-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }',
-    '    .author { font-size: 24px; line-height: 1.2; font-weight: 600; color: #584633; }',
+    '    .author { font-family: "CoverNotoSerifSC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif; font-size: 24px; line-height: 1.2; font-weight: 600; color: #584633; }',
     '    .date { font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif; font-size: 18px; line-height: 1.2; color: #90725A; letter-spacing: 0.03em; }',
     '  </style>',
     '  <script>',
@@ -319,8 +341,8 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
     '      const frame = document.querySelector(".summary-frame");',
     '      const summary = document.querySelector(".summary");',
     '      if (!(frame instanceof HTMLElement) || !(summary instanceof HTMLElement)) return;',
-    '      const minSize = 28;',
-    '      const maxSize = 64;',
+    '      const minSize = 30;',
+    '      const maxSize = 60;',
     '      let low = minSize;',
     '      let high = maxSize;',
     '      let best = minSize;',
@@ -367,9 +389,14 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
   try {
     await page.setContent(coverHtml, { waitUntil: 'load' });
     await page.waitForFunction(() => document.body?.dataset.coverReady === 'true', undefined, { timeout: 15_000 });
-    await page.waitForFunction(() => Array.from(document.images).every((image) => image.complete), undefined, {
-      timeout: 15_000,
-    });
+    await page.waitForFunction(
+      async () => {
+        await document.fonts.ready;
+        return Array.from(document.images).every((image) => image.complete);
+      },
+      undefined,
+      { timeout: 15_000 },
+    );
     await page.screenshot({ path: filePath, clip: { x: 0, y: 0, width: LAYOUT.PAGE_WIDTH, height: LAYOUT.PAGE_HEIGHT }, type: 'png' });
   } catch (error) {
     throw new Markdown2ImgError(
