@@ -168,47 +168,49 @@ body {
 }
 
 .block-heading-level-2 {
-  margin-top: var(--spacing-section-top);
-  margin-bottom: var(--spacing-section-bottom);
-  padding-top: 26px;
-  border-top: 1px solid rgba(95, 86, 76, 0.14);
-}
-
-.block-heading-level-2:first-child {
-  margin-top: 0;
+  margin-top: calc(var(--spacing-section-top) + 8px);
+  margin-bottom: 22px;
   padding-top: 0;
   border-top: 0;
 }
 
+.block-heading-level-2::before {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 1px;
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, rgba(95, 86, 76, 0.24), rgba(95, 86, 76, 0.06));
+}
+
+.block-heading-level-2:first-child {
+  margin-top: 0;
+}
+
+.block-heading-level-2:first-child::before {
+  display: none;
+}
+
 .block-heading-level-2 h2 {
   font-family: var(--font-title);
-  font-size: var(--font-size-h2);
-  font-weight: 560;
-  letter-spacing: -0.01em;
-  color: #2c3137;
+  font-size: 40px;
+  font-weight: 540;
+  letter-spacing: -0.008em;
+  color: #34373b;
 }
 
 .block-heading-level-3 {
-  margin-top: 38px;
-  margin-bottom: 12px;
+  margin-top: 42px;
+  margin-bottom: 14px;
 }
 
 .block-heading-level-3 h3 {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
+  display: block;
   font-family: var(--font-ui);
-  font-size: var(--font-size-h3);
-  font-weight: 700;
-  letter-spacing: 0.008em;
-  color: #383f46;
-}
-
-.block-heading-level-3 h3::before {
-  content: "";
-  width: 28px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(184, 132, 71, 0.88), rgba(184, 132, 71, 0.14));
+  font-size: 33px;
+  font-weight: 680;
+  letter-spacing: 0.002em;
+  color: #3a4046;
 }
 
 .block-heading + .block-paragraph,
@@ -246,21 +248,7 @@ body {
 
 .block-paragraph.block-role-section-opening,
 .block-paragraph.block-role-subsection-opening {
-  max-width: 860px;
   margin-top: 0;
-  color: #2d312f;
-}
-
-.block-paragraph.block-role-section-opening p {
-  font-size: 35px;
-  line-height: 1.7;
-  letter-spacing: 0.003em;
-}
-
-.block-paragraph.block-role-subsection-opening p {
-  font-size: 32px;
-  line-height: 1.72;
-  color: #37332e;
 }
 
 .block-paragraph.block-role-list-intro {

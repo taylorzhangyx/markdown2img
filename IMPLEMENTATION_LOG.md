@@ -216,3 +216,29 @@
 - `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered 8 pages to `/tmp/markdown2img-renders/20260418-124352`.
 - Visual QA on `003.png` confirmed the earlier `成功 / 率高` split is gone; the heading no longer breaks inside `成功率高` after removing balanced wrapping from `h2`.
 - The new wrap point moved to the title tail (`工作流稳 / 定`), which is better than the previous mid-phrase split but still indicates a follow-up typography decision may be needed if we want fully controlled Chinese heading breaks.
+
+## 2026-04-18 13:31:09 CST
+
+### Calm editorial heading pass
+- Updated `src/templates/theme-default.css` to push H2/H3 toward a calmer, more trust-building editorial hierarchy instead of a component-like heading system.
+- H2 now uses a shorter pre-title rule rather than a full-width section divider, with slightly lighter typography (`40px`, `540`) and more deliberate section spacing so chapter starts feel quieter and more typographic.
+- H3 removed the left decorative rule entirely and now relies on sans-serif weight, color, and spacing alone, aiming for a more natural subsection lead that feels integrated with the prose.
+- Rebuilt before validation so the rerender picked up the latest CSS changes from `dist/`.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the H2/H3 style changes.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-132934`; page count dropped from 8 to 7 after the typography/spacing pass.
+- Visual QA on `003.png` found H2 now reads calmer and more editorial, with the short rule feeling less like a system divider and more like a quiet chapter cue.
+- Visual QA on `004.png` found H3 is more natural and more trustworthy without the left-side decoration, though it may still want another small reduction in visual weight if we continue refining.
+
+## 2026-04-18 13:39:31 CST
+
+### Removed section-opening lead styling
+- Removed the enlarged `section-opening` / `subsection-opening` paragraph treatment from `src/templates/theme-default.css` after user feedback that the first paragraph under headings felt confusingly larger than the rest of the body copy.
+- Kept the structural roles in HTML for future use, but the theme no longer changes paragraph size or color based on those roles; body paragraphs now stay visually uniform.
+- Rebuilt before validation so the bundled CLI used the updated CSS.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after removing the section-opening lead styles.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-133857`.
+- Visual QA on `007.png` confirmed the `结语` first paragraph no longer appears larger than the following paragraphs; the body copy now reads as uniform prose instead of a lead-paragraph pattern.
