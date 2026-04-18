@@ -2,7 +2,7 @@
   --page-width: 1080px;
   --page-height: 1800px;
   --page-padding: 76px;
-  --first-page-identity-reserve: 124px;
+  --first-page-identity-reserve: 140px;
   --content-width: 848px;
 
   --color-bg: #f5f2ec;
@@ -27,12 +27,12 @@
   --color-list-border: rgba(184, 132, 71, 0.22);
   --color-takeaway-bg: rgba(184, 132, 71, 0.08);
 
-  --font-body: "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", serif;
+  --font-body: "BodyNotoSerifSC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif;
   --font-title: "Source Han Serif CN", "Songti SC", "STSong", "Noto Serif CJK SC", "Noto Serif SC", serif;
   --font-ui: "Source Han Sans CN VF", "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", "Hiragino Sans GB", "STHeiti", "Microsoft YaHei", sans-serif;
   --font-code: "SF Mono", "Fira Code", "Menlo", "Consolas", monospace;
 
-  --font-size-body: 31px;
+  --font-size-body: 36px;
   --font-size-h1: 58px;
   --font-size-h2: 42px;
   --font-size-h3: 34px;
@@ -41,7 +41,7 @@
   --font-size-table: 22px;
   --font-size-mermaid: 18px;
 
-  --line-height-body: 1.8;
+  --line-height-body: 1.64;
   --line-height-heading: 1.22;
   --line-height-code: 1.5;
 
@@ -225,7 +225,7 @@ body {
 .block p,
 .block li,
 .block table {
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   font-size: var(--font-size-body);
   font-weight: 500;
   line-height: var(--line-height-body);
@@ -233,12 +233,14 @@ body {
 
 .block p,
 .block li {
-  text-align: justify;
-  text-justify: inter-ideograph;
+  text-align: left;
+  text-justify: auto;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .block p {
-  color: #252a30;
+  color: #20252b;
 }
 
 .block-paragraph + .block-paragraph {

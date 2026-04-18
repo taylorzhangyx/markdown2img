@@ -248,6 +248,22 @@ The discussion established these typography priorities:
 - larger text is good only when paired with breathing room; otherwise it becomes pressure, not authority
 - quote marks, headings, and signature text should all feel like one editorial family
 
+### Current body-typography gaps (observed in real article renders)
+Recent visual review of user-generated body pages surfaced two body issues that now count as active design debt:
+- mixed Chinese/English paragraphs are not broken, but they are still not fully smooth; long inline English phrases change the line texture too abruptly and make some lines feel more mechanical than editorial
+- body spacing has crossed from readable into slightly over-loose; the line-height and paragraph rhythm make some pages feel a bit scattered instead of like a tightly composed long-form essay
+
+These issues matter because they weaken the exact feeling the system is supposed to deliver:
+- calm, but not drifting
+- trustworthy, but not stiff
+- slow-reading, but not sparse
+- editorial, but not mechanically justified
+
+For future body iterations, prefer this diagnosis order:
+1. restore paragraph cohesion before changing the whole font strategy
+2. improve mixed-language rhythm before adding any extra decoration
+3. treat microtypography as part of trust-building, not cosmetic polish
+
 ### Explicit anti-patterns discovered during iteration
 The discussion repeatedly rejected these directions:
 - generic title-cover layouts

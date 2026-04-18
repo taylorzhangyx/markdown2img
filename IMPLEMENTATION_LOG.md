@@ -378,3 +378,53 @@
 - Updated `README.md` with a dedicated Agent skill section that explains the skill’s purpose and how to consume/install the repo copy for Hermes, Claude Code, Codex, and OpenClaw.
 - Documented the recommended pattern explicitly: keep the repo copy as the canonical source and symlink/copy or load it from each agent runtime as appropriate.
 
+## 2026-04-18 16:38:34 CST
+
+### Body typography diagnosis from real article renders
+- Reviewed user-generated renders (`002.png` and `003.png`) and recorded two active body-page issues: mixed Chinese/English prose is broadly coherent but still not fully smooth, and the current body rhythm feels a little too loose/scattered for the intended editorial trust-building tone.
+- The current implementation likely contributes to that feeling in three ways inside `src/templates/theme-default.css`: body copy is using the sans `--font-ui` stack at `font-weight: 500`, global body line-height is set to `1.8`, and paragraphs/lists are forced into `text-align: justify` with `text-justify: inter-ideograph`.
+- The combination explains the observed output well: heavier sans body copy plus wide line spacing weakens paragraph cohesion, while justified mixed-language lines can make long inline English phrases feel mechanically stretched instead of naturally typeset.
+- Logged the design-side conclusion in `docs/design.md`: future body work should first restore paragraph cohesion, then improve mixed-language rhythm, before attempting broader font-family redesign.
+
+## 2026-04-18 16:43:09 CST
+
+### First body-typography correction pass
+- Updated `src/templates/theme-default.css` to pull body prose back toward a tighter editorial rhythm: reduced `--line-height-body` from `1.8` to `1.68`, lowered paragraph/list/table weight from `500` to `460`, and removed justified body copy in favor of left-aligned prose.
+- Added body-level `word-break: normal` and `overflow-wrap: break-word` on paragraphs/lists so mixed Chinese/English lines keep a more natural texture instead of being aggressively stretched by justification and broad wrap rules.
+- Kept the overall body font family unchanged for this pass so the iteration isolates rhythm/spacing behavior before attempting a larger font-system change.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the body typography pass.
+- `node dist/cli.js tests/fixtures/xiaohongshu-tight-lines.md -o /tmp/markdown2img-renders` ✅ — rendered 3 pages to `/tmp/markdown2img-renders/20260418-164304` for targeted mixed-language body QA.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rendered 7 pages to `/tmp/markdown2img-renders/20260418-164309` for representative long-form regression QA.
+- Visual QA on `/tmp/markdown2img-renders/20260418-164304/002.png` and `003.png` found tighter paragraph cohesion and less floaty line spacing, with mixed-language lines reading more naturally overall.
+- Visual QA on `/tmp/markdown2img-renders/20260418-164309/003.png` found that removing justification improved editorial feel and reduced the mechanically stretched texture in mixed Chinese/English prose, with some remaining room to refine long inline English phrases and overall body weight.
+
+## 2026-04-18 16:57:03 CST
+
+### Second body-typography pass: serif body + slightly larger prose
+- Updated `src/templates/theme-default.css` so body paragraphs/lists/tables now use the serif `--font-body` stack instead of the sans `--font-ui` stack, aiming to make Chinese and inline English read more like one editorial prose system instead of a UI-text block with inserted Latin fragments.
+- Increased `--font-size-body` from `31px` to `33px` so the body carries a little more authority and better matches the page scale and headline presence.
+- Tightened `--line-height-body` from `1.68` to `1.64` and lowered body weight to `400` so the larger serif body does not drift back into a loose or overly heavy texture.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the serif body pass.
+- `node dist/cli.js '/Users/taylorzyx/Library/Mobile Documents/iCloud~md~obsidian/Documents/little-tz/03 Outputs/Writing/2026-04-16 - 从 Prompt 到 Passport：为什么高能力 AI 产品最终会走向身份门控 - 小红书版 - 精修版.md' -o /tmp/markdown2img-renders` ✅ — rendered 5 pages to `/tmp/markdown2img-renders/20260418-165537` for direct article QA.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rendered 7 pages to `/tmp/markdown2img-renders/20260418-165543` for representative long-form regression QA.
+- Visual QA on `/tmp/markdown2img-renders/20260418-165537/002.png`, `003.png`, and `004.png` found a clear gain in editorial warmth and a more publication-like prose voice, with Chinese/English mixed lines feeling more cohesive overall.
+- Remaining issue after this pass: long inline English phrases still attract too much attention inside Chinese paragraphs, so the next refinement should focus more on mixed-script measure/phrase handling than on raw size alone.
+- Additional user feedback on the new render: the body strokes still read too thin, and the inline English appears to sit slightly higher than adjacent Chinese on the baseline, making mixed lines feel visually unlevel.
+- The current code explains that risk: body prose now uses `--font-body` (`Songti SC` / `STSong` / local serif fallbacks) in `src/templates/theme-default.css`, but only the cover has a bundled, controlled serif font asset (`NotoSerifSC[wght].ttf`). So body rendering is still depending on local serif fallback behavior rather than a fully controlled CJK/Latin pairing.
+
+## 2026-04-18 17:21:33 CST
+
+### Controlled body-font pass + mobile readability weight bump
+- Researched Google Fonts options for Chinese/English body prose and confirmed the most relevant candidates are still `Noto Serif SC` and `Noto Sans SC`; for this project's warm editorial long-form goal, `Noto Serif SC` remains the better fit.
+- Updated `src/stages/render-html.ts` so body-page HTML now injects `@font-face` for the bundled `NotoSerifSC[wght].ttf`, giving article prose the same controlled serif source strategy that the cover already uses instead of relying on local Songti/STSong fallbacks.
+- Updated `src/templates/theme-default.css` so `--font-body` prioritizes the new `BodyNotoSerifSC` family, then increased body weight from `430` to `500` and darkened paragraph color slightly to improve actual phone readability after user feedback that the prose still felt too thin.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the controlled body-font and heavier-weight pass.
+- `node dist/cli.js '/Users/taylorzyx/Library/Mobile Documents/iCloud~md~obsidian/Documents/little-tz/03 Outputs/Writing/2026-04-16 - 从 Prompt 到 Passport：为什么高能力 AI 产品最终会走向身份门控 - 小红书版 - 精修版.md' -o /tmp/markdown2img-renders` ✅ — rendered 5 pages to `/tmp/markdown2img-renders/20260418-172014` for direct article QA.
+- Visual QA on `/tmp/markdown2img-renders/20260418-172014/002.png`, `003.png`, and `004.png` found stronger small-screen readability, preserved editorial tone, and still-solid Chinese/English line alignment, with the main remaining trade-off being slightly darker text blocks and long English phrases still reading as distinct texture islands.
+

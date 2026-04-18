@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { ArticleMeta, ContentBlock } from '../types.js';
 
@@ -20,6 +20,8 @@ function resolveAssetPath(...relativeCandidates: string[]): string {
 
 const THEME_CSS_PATH = resolveAssetPath('../templates/theme-default.css', './templates/theme-default.css');
 const MERMAID_SCRIPT_PATH = resolveAssetPath('../assets/mermaid.min.js', './assets/mermaid.min.js');
+const BODY_SERIF_FONT_PATH = resolveAssetPath('../assets/fonts/NotoSerifSC[wght].ttf', './assets/fonts/NotoSerifSC[wght].ttf');
+const BODY_SERIF_FONT_URL = pathToFileURL(BODY_SERIF_FONT_PATH).toString();
 
 function escapeHtml(value: string): string {
   return value
@@ -151,7 +153,7 @@ export async function renderHtml(meta: ArticleMeta, blocks: readonly ContentBloc
     '  <meta charset="utf-8">',
     '  <meta name="viewport" content="width=device-width, initial-scale=1">',
     `  <title>${escapeHtml(title)}</title>`,
-    `  <style>${themeCss}</style>`,
+    `  <style>@font-face { font-family: "BodyNotoSerifSC"; src: url("${BODY_SERIF_FONT_URL}") format("truetype"); font-weight: 200 900; font-style: normal; font-display: block; } ${themeCss}</style>`,
     `  <script>${mermaidScript}</script>`,
     `  <script>
       mermaid.initialize({
@@ -171,7 +173,7 @@ export async function renderHtml(meta: ArticleMeta, blocks: readonly ContentBloc
           primaryBorderColor: '#B88447',
           lineColor: '#9C8A75',
           tertiaryColor: '#F1ECE4',
-          fontFamily: 'Songti SC, STSong, Noto Serif CJK SC, Noto Serif SC, Source Han Serif SC, Source Han Serif CN, serif',
+          fontFamily: 'BodyNotoSerifSC, Noto Serif SC, Source Han Serif SC, Source Han Serif CN, Songti SC, STSong, serif',
           fontSize: '18px',
         },
       });
