@@ -288,8 +288,7 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
   await mkdir(outputDir, { recursive: true });
 
   const avatarDataUri = meta.avatar_path ? avatarToBase64(meta.avatar_path) : undefined;
-  const title = meta.title.trim() || 'Untitled Article';
-  const summary = meta.cover_summary?.trim() || title;
+  const summary = meta.cover_summary?.trim() || meta.title.trim() || 'Untitled Article';
 
   const coverHtml = [
     '<!DOCTYPE html>',
@@ -304,25 +303,52 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
     '    * { box-sizing: border-box; }',
     `    .cover { position: relative; width: ${LAYOUT.PAGE_WIDTH}px; height: ${LAYOUT.PAGE_HEIGHT}px; padding: 84px 76px 88px; background: linear-gradient(180deg, #F7F4EF 0%, #F4F1EA 100%); }`,
     '    .cover::before { content: ""; position: absolute; inset: 34px; border: 1px solid rgba(95, 86, 76, 0.12); border-radius: 32px; pointer-events: none; }',
-    '    .eyebrow { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px; color: #7A746C; font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif; font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; }',
-    '    .eyebrow::after { content: ""; flex: 1 1 auto; height: 1px; background: linear-gradient(90deg, rgba(95, 86, 76, 0.16), rgba(95, 86, 76, 0.03)); }',
     '    .content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }',
-    '    .title { margin: 58px 0 0; max-width: 820px; font-size: 66px; line-height: 1.16; font-weight: 600; letter-spacing: -0.02em; color: #1F2328; }',
-    '    .summary { margin-top: 34px; max-width: 760px; padding: 0 2px 0 0; color: #3F3A33; font-size: 31px; line-height: 1.82; letter-spacing: 0.003em; }',
-    '    .summary::before { content: "“"; display: block; margin-bottom: 18px; color: #C79C63; font-size: 78px; line-height: 0.7; }',
-    '    .identity { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 16px; color: #4B453E; }',
+    '    .summary-stage { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 0 0 76px; }',
+    '    .summary-frame { position: relative; width: min(904px, calc(100% - 8px)); max-height: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }',
+    '    .summary { --summary-font-size: 50px; position: relative; margin: 0; width: 100%; padding-left: 42px; color: #4C3E2F; font-family: "Iowan Old Style", "Source Han Serif CN SemiBold", "Source Han Serif CN", "Source Han Serif SC", "Songti SC", "STSong", "Noto Serif CJK SC", serif; font-size: var(--summary-font-size); font-weight: 600; line-height: 1.54; letter-spacing: 0; text-align: justify; text-justify: inter-ideograph; }',
+    '    .summary::before { content: "“"; position: absolute; left: -14px; top: -30px; color: rgba(184, 132, 71, 0.9); font-size: clamp(78px, calc(var(--summary-font-size) * 1.9), 118px); line-height: 0.8; }',
+    '    .identity { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 16px; color: #5C4C3C; }',
     '    .avatar { width: 60px; height: 60px; border-radius: 999px; object-fit: cover; background: #ECE5DA; border: 1px solid rgba(95, 86, 76, 0.12); }',
     '    .identity-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }',
-    '    .author { font-size: 24px; line-height: 1.2; font-weight: 600; color: #2B2925; }',
-    '    .date { font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif; font-size: 18px; line-height: 1.2; color: #7A746C; letter-spacing: 0.03em; }',
+    '    .author { font-size: 24px; line-height: 1.2; font-weight: 600; color: #584633; }',
+    '    .date { font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", sans-serif; font-size: 18px; line-height: 1.2; color: #90725A; letter-spacing: 0.03em; }',
     '  </style>',
+    '  <script>',
+    '    function fitSummary() {',
+    '      const frame = document.querySelector(".summary-frame");',
+    '      const summary = document.querySelector(".summary");',
+    '      if (!(frame instanceof HTMLElement) || !(summary instanceof HTMLElement)) return;',
+    '      const minSize = 28;',
+    '      const maxSize = 64;',
+    '      let low = minSize;',
+    '      let high = maxSize;',
+    '      let best = minSize;',
+    '      while (low <= high) {',
+    '        const mid = Math.floor((low + high) / 2);',
+    '        summary.style.setProperty("--summary-font-size", `${mid}px`);',
+    '        const fits = summary.scrollHeight <= frame.clientHeight && summary.scrollWidth <= frame.clientWidth;',
+    '        if (fits) {',
+    '          best = mid;',
+    '          low = mid + 1;',
+    '        } else {',
+    '          high = mid - 1;',
+    '        }',
+    '      }',
+    '      summary.style.setProperty("--summary-font-size", `${best}px`);',
+    '      document.body.dataset.coverReady = "true";',
+    '    }',
+    '    window.addEventListener("load", fitSummary);',
+    '  </script>',
     '</head>',
     '<body>',
     '  <div class="cover">',
     '    <div class="content">',
-    '      <div class="eyebrow">Article Summary</div>',
-    `      <h1 class="title">${escapeHtml(title)}</h1>`,
-    `      <div class="summary">${escapeHtml(summary)}</div>`,
+    '      <div class="summary-stage">',
+    '        <div class="summary-frame">',
+    `          <div class="summary">${escapeHtml(summary)}</div>`,
+    '        </div>',
+    '      </div>',
     '      <div class="identity">',
     (avatarDataUri ? `        <img class="avatar" src="${escapeHtml(avatarDataUri)}" alt="">` : '        <div class="avatar"></div>'),
     '        <div class="identity-copy">',
@@ -340,6 +366,7 @@ export async function renderCoverPage(page: Page, meta: ArticleMeta, outputDir: 
 
   try {
     await page.setContent(coverHtml, { waitUntil: 'load' });
+    await page.waitForFunction(() => document.body?.dataset.coverReady === 'true', undefined, { timeout: 15_000 });
     await page.waitForFunction(() => Array.from(document.images).every((image) => image.complete), undefined, {
       timeout: 15_000,
     });

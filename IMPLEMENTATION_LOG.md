@@ -267,3 +267,39 @@
 - `npm run build` ✅ — rebuilt the bundled CLI after removing H1 balanced wrapping.
 - `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-135645`.
 - Visual QA on `001.png` confirmed the first body-page H1 no longer reads like an intentionally balanced two-line title; the wrap now looks more like normal automatic line breaking.
+
+## 2026-04-18 14:26:07 CST
+
+### Cover quote and warm-text cover pass
+- Reworked the cover quote treatment in `src/stages/screenshot.ts` so the opening quote now sits near the summary block's upper-left edge instead of floating alone above the text.
+- Removed the cover-page title/eyebrow block entirely and kept the cover focused on quote + summary copy, with dynamic summary sizing constrained by min/max font-size bounds.
+- Tuned the cover summary and byline colors toward a warmer brown-gray palette so they harmonize with the gold-brown quote accent while preserving readability and the calm editorial mood.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the cover quote / color updates.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-142536`.
+- Visual QA on `001.png` confirmed the quote now reads more like a textual opening mark than a floating ornament, and the cover text color now sits in the same warm palette family as the gold-brown quote accent.
+
+## 2026-04-18 14:31:55 CST
+
+### Stronger cover summary typography pass
+- Increased the cover summary's typographic presence in `src/stages/screenshot.ts` by using a stronger serif stack (preferring `Source Han Serif CN SemiBold`) and a larger dynamic summary size range.
+- Raised the summary's visual weight, slightly widened the text block, and enlarged the quote mark so the cover reads more like a confident long-form editorial opener while staying within the calm warm palette.
+- Rebuilt before validation so the bundled CLI used the updated cover typography.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the stronger cover typography changes.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-143129`.
+- Visual QA on `001.png` confirmed the summary now appears visibly larger and stronger, the serif face feels steadier and more suitable for trust-building editorial reading, and the quote mark is larger while still coordinated with the overall layout.
+
+## 2026-04-18 14:51:55 CST
+
+### Iowan + stronger cover typography preview
+- Updated the cover summary typography in `src/stages/screenshot.ts` to use a stronger mixed serif stack led by `Iowan Old Style` for Latin text and `Source Han Serif CN SemiBold` for Chinese, aiming for a more trustworthy, reading-oriented editorial tone.
+- Increased the cover summary size/weight again, widened the cover text block slightly, and enlarged the quote mark so the cover reads with more confidence and presence.
+- Rebuilt before validation so the bundled CLI rendered the latest cover typography.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the new cover font-stack / size changes.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-145033`.
+- Visual QA on `001.png` confirmed the summary is visibly larger and heavier, the mixed serif stack feels more mature and trustworthy, and the quote is larger; remaining issues now come more from text-block density than from font choice direction.
