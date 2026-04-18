@@ -1,101 +1,33 @@
 # markdown2img
 
-`markdown2img` is a CLI tool that converts a structured Markdown article into a sequence of fixed-size `1080×1440` PNG images for mobile reading.
+`markdown2img` is a CLI pipeline that converts a Markdown article into a sequence of fixed-size mobile reading cards rendered as PNG images.
 
-It is designed for a specific publishing workflow: write in Markdown, run one command, and get a deterministic set of image pages that are easy to preview, share, or publish on mobile-first platforms.
+The project is optimized for long-form technical/editorial writing that starts in Markdown and ends as publishable image pages for mobile-first platforms.
 
-## Project background
+## Current product shape
 
-A lot of strong long-form content starts life as Markdown: engineering notes, explainers, tutorials, internal writeups, and social-post drafts. But turning that content into polished image cards is usually still manual.
+The current renderer produces:
+- a **summary-led cover page**
+- a sequence of **content pages at `1080×1800`**
+- deterministic PNG output in a timestamped directory
+- browser-measured pagination using Playwright + Chromium
 
-Typical pain points:
-- copying text into design tools page by page
-- inconsistent typography and spacing across posts
-- awkward handling of long articles
-- poor support for code, tables, diagrams, and technical blocks
-- too much manual layout work for repeat publishing
+The visual system is currently a warm, light, editorial reading theme with:
+- serif-forward body typography
+- a calm paper-like background
+- a quote-style cover built from `cover_summary`
+- a small signature block with avatar / author / date
 
-`markdown2img` solves this with a CLI-first rendering pipeline:
+---
 
-```text
-Parse -> Validate -> Normalize -> Render HTML -> Paginate -> Screenshot
-```
-
-The implementation prioritizes:
-- readability on iPhone-class screens
-- deterministic output
-- stable rendering through Chromium / Playwright
-- explicit validation and debuggable failure modes
-
-## What this project does
-
-Given a Markdown file, `markdown2img` will:
-- parse frontmatter and body content
-- validate required metadata and local assets
-- normalize supported Markdown blocks into a renderable structure
-- render the full article as one tall HTML page
-- measure real browser layout in Chromium
-- compute page breaks for `1080×1440` output pages
-- inject page decorations like author identity and END marker
-- export sequential PNGs into a timestamped output directory
-
-## Core features
-
-### 1. Mobile-first fixed-size output
-- every page is rendered at exactly `1080×1440`
-- suitable for iPhone-oriented reading and image-post workflows
-- timestamped output directories make repeated runs easy to manage
-
-### 2. Deterministic browser-based rendering
-- rendering is done in Chromium via Playwright
-- layout is measured in the browser, not guessed in Node.js
-- pagination uses real rendered heights, which is much more stable for technical content
-
-### 3. Single-render + clip screenshot strategy
-Instead of generating separate HTML for each page, the tool renders the article once and takes multiple clipped screenshots from the same page.
-
-This reduces layout drift and keeps pagination behavior stable.
-
-### 4. Structured article metadata
-Supports YAML frontmatter for article-level metadata, including:
-- `title`
-- `author_name` (required)
-- `date`
-- `avatar_path`
-- `cover_image`
-
-### 5. Technical-content friendly blocks
-The renderer supports common content types used in technical articles:
-- headings
-- paragraphs
-- lists
-- blockquotes
-- fenced code blocks
-- GFM tables
-- local images
-- Mermaid diagrams
-
-### 6. Publishing-oriented decorations
-- optional cover page when `cover_image` is provided
-- first-page identity block with author / avatar / date
-- END marker on the last page
-
-### 7. Explicit error handling
-The CLI returns structured, human-readable errors for common failure cases such as:
-- missing input file
-- missing `author_name`
-- missing local images / avatar / cover
-- Mermaid render failure
-- screenshot / layout failure
-
-## Installation
+## Quick start
 
 ### Requirements
 - Node.js
 - npm
 - Playwright Chromium runtime
 
-### Install dependencies
+### Install
 
 ```bash
 npm install
@@ -108,123 +40,200 @@ npx playwright install chromium
 npm run build
 ```
 
-## Supported commands and options
-
-The CLI currently exposes one main command:
-
-```bash
-markdown2img <input> [options]
-```
-
-### Positional argument
-- `<input>`: path to the source Markdown file
-
-### Options
-- `-o, --output <dir>`: output base directory
-- `-h, --help`: show help
-- `-V, --version`: show version
-
-### Examples
-
-Run directly in a dev environment:
-
-```bash
-npx markdown2img article.md -o ./output
-```
-
-Run the built CLI:
+### Run
 
 ```bash
 node dist/cli.js article.md -o ./output
 ```
 
-Write output next to the source file:
+Or during development:
 
 ```bash
-node dist/cli.js article.md
+npx markdown2img article.md -o ./output
 ```
 
-## Frontmatter example
+---
+
+## What the pipeline does
+
+```text
+Parse -> Validate -> Normalize -> Render HTML -> Measure -> Paginate -> Cover Screenshot -> Content Screenshots
+```
+
+At a high level:
+1. parse Markdown + YAML frontmatter
+2. validate metadata and local assets
+3. normalize Markdown into renderable block objects
+4. render one tall HTML article document
+5. measure real browser layout in Chromium
+6. compute page breaks from measured block geometry
+7. render a dedicated summary-led cover page
+8. clip screenshots for each content page
+
+This design avoids guessing layout in Node.js and keeps output stable across repeated runs on the same machine/runtime.
+
+---
+
+## Frontmatter
+
+### Recommended fields
 
 ```md
 ---
-title: My Article
-author_name: Taylor Zhang
-date: 2026-04-17
+title: 为什么 Agent 基础设施会在第 100 个工作流开始失效
+author_name: AI工程Tay
+date: 2026-04-18
 avatar_path: ./assets/avatar.png
-cover_image: ./assets/cover.png
+cover_summary: Demo 阶段好用的 Agent，往往在真实流量里先败给上下文污染、工具背压、检索失真和观测断裂，而不是先败给模型智力。
+theme: default
 ---
-
-# Main Heading
-
-This is the article body.
 ```
 
-## Supported Markdown features
+### Supported metadata
+- `title`
+- `author_name`
+- `avatar_path`
+- `date`
+- `theme`
+- `cover_summary`
+- `summary` — accepted as an alias source for cover summary derivation
+- `cover_image` — currently validated if supplied, but the active cover design is **summary-led**, not image-led
 
-### Metadata
-- YAML frontmatter
-- recognized fields:
-  - `title`
-  - `author_name`
-  - `date`
-  - `avatar_path`
-  - `cover_image`
-- unknown frontmatter fields are ignored
+### Current cover behavior
+- the cover is generated even without `cover_image`
+- `cover_summary` is preferred when provided
+- if `cover_summary` is missing, the validator derives one from:
+  1. `summary`
+  2. the first meaningful paragraph
+  3. the title
+- cover summary text is normalized and length-limited before rendering
 
-### Block types
+### Current metadata fallback behavior
+- if `avatar_path` is omitted, the pipeline uses the bundled default avatar
+- if `author_name` is omitted or blank, validation currently falls back to a placeholder author string instead of failing hard
+
+---
+
+## Supported content blocks
+
+`markdown2img` currently renders these block types:
 - H1 / H2 / H3 headings
 - paragraphs
-- ordered lists
-- unordered lists
+- ordered / unordered lists
 - blockquotes
 - fenced code blocks
 - GFM tables
-- local images via `file://`
-- Mermaid fenced code blocks rendered in Chromium
+- local images
+- Mermaid fenced code blocks
 
 ### Inline formatting
 - bold
 - italic
 - inline code
+- standard inline links/text formatting supported by the Markdown → HTML pipeline
 
-## Output format
+---
 
-Each run creates a timestamped directory like:
+## Asset handling
+
+### Local images
+All referenced local images are resolved during validation.
+
+Current behavior:
+- missing local assets fail early with an explicit error
+- article images are embedded into the rendered HTML as **base64 data URIs**, not `file://` URLs
+- avatar images are also embedded for reliable browser rendering
+
+This changed intentionally to make Chromium rendering more robust inside the `page.setContent()` pipeline.
+
+### Mermaid
+- Mermaid is bundled locally
+- Mermaid diagrams are rendered in Chromium after HTML load
+- Mermaid failures surface as explicit CLI errors
+
+---
+
+## Output
+
+Each run creates a timestamped directory:
 
 ```text
 YYYYMMDD-HHmmss/
   001.png
   002.png
   003.png
+  ...
 ```
 
-Output behavior:
-- pages are sequentially numbered
-- every PNG is exactly `1080×1440`
-- if `cover_image` is present, the cover becomes `001.png`
-- content pages follow after the cover page
-- if `-o` is omitted, output is written next to the input file
+Current output rules:
+- every page is exactly `1080×1800`
+- `001.png` is the dedicated cover page
+- content pages start after the cover
+- the last content page may include an `END` marker
+- output is written next to the source file unless `-o` is provided
 
-## Rendering behavior
+---
 
-### Pagination
-- pagination is based on measured browser layout
-- headings are prevented from being orphaned at the bottom of a page
+## CLI
+
+```bash
+markdown2img <input> [options]
+```
+
+### Arguments
+- `<input>`: source Markdown file
+
+### Options
+- `-o, --output <dir>`: output base directory
+- `-h, --help`: help
+- `-V, --version`: version
+
+### Examples
+
+```bash
+node dist/cli.js tests/fixtures/full-article.md -o /tmp/markdown2img-check
+```
+
+```bash
+node dist/cli.js article.md
+```
+
+---
+
+## Rendering model
+
+### One tall HTML document
+The article body is rendered once as a tall HTML page.
+
+Why this matters:
+- less page-to-page layout drift
+- one browser layout pass for measurement
+- screenshot clipping stays consistent with measured geometry
+
+### Browser-measured pagination
+Pagination is based on actual DOM measurements collected in Playwright.
+
+Current rules include:
+- headings are not left orphaned at the bottom of a page when avoidable
 - images, Mermaid blocks, and tables are treated as non-splittable blocks
-- v1 does **not** support line-level splitting inside a paragraph or code block
+- paragraphs/lists/code are measured as block units
+- the system does **not** do line-level cross-page splitting inside a single paragraph or code block
 
-### Images
-- article images are loaded as local `file://` URLs
-- missing image assets fail validation before rendering
+### Dedicated cover rendering
+The cover is rendered separately from body pages.
 
-### Mermaid
-- Mermaid is bundled locally and rendered in Chromium
-- Mermaid failures are surfaced as explicit CLI errors
+Current cover design characteristics:
+- summary-led quote composition
+- bundled Noto Serif SC for cover typography
+- autosized summary text within bounded min/max sizes
+- warm editorial palette
+- lower-left signature block with avatar / author / date
 
-## Error output
+---
 
-Errors are printed in this format:
+## Error format
+
+Errors are printed like this:
 
 ```text
 [ERROR] <error_code>: <message>
@@ -243,6 +252,8 @@ Exit codes:
 - success: `0`
 - failure: `1`
 
+---
+
 ## Development
 
 ### Useful commands
@@ -253,52 +264,60 @@ npm run build
 npx tsc --noEmit
 ```
 
-### End-to-end example
+### Representative fixture
 
 ```bash
-node dist/cli.js tests/fixtures/full-article.md -o /tmp/markdown2img-check
+node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders
 ```
+
+### Important source files
+- `src/cli.ts` — CLI entrypoint
+- `src/pipeline.ts` — orchestration pipeline
+- `src/stages/parse.ts` — Markdown + frontmatter parsing
+- `src/stages/validate.ts` — metadata derivation + asset resolution
+- `src/stages/normalize.ts` — Markdown AST → content blocks
+- `src/stages/render-html.ts` — body HTML generation
+- `src/stages/paginate.ts` — measured block pagination
+- `src/stages/screenshot.ts` — cover rendering + page screenshot logic
+- `src/templates/theme-default.css` — body theme CSS
+
+---
+
+## Documentation
+
+Additional docs:
+- `docs/architecture.md` — system architecture and pipeline stages
+- `docs/design.md` — visual/design system and current editorial principles
+- `docs/technical.md` — data model, assets, runtime behavior, and implementation notes
+- `IMPLEMENTATION_LOG.md` — chronological debugging and iteration log
+
+---
 
 ## Current scope and limitations
 
-This project is intentionally narrow in scope.
+### In scope
+- one primary default theme
+- local-file workflow
+- deterministic PNG generation
+- technical-article-friendly blocks
+- summary-led editorial cover design
 
-### Supported scope
-- one default visual theme
-- local assets only
-- mobile-first PNG output
-- deterministic single-command workflow
-
-### Not in scope
-- arbitrary theme customization
+### Out of scope
+- interactive editor / live preview UI
 - remote asset fetching
-- interactive editing / preview UI
-- PDF / PPT export
-- cross-machine pixel-perfect guarantees
 - arbitrary HTML authoring
-- line-level cross-page splitting
+- PDF / PPT export
+- user-configurable theme builder
+- line-level paragraph splitting across pages
+- cross-machine pixel-perfect guarantees without runtime alignment
 
-## Why this design
+---
 
-Two design choices matter most:
+## Status
 
-1. **Browser-measured pagination**
-   - avoids guessing text height in Node.js
-   - uses real browser layout for code, tables, images, and Mermaid
-
-2. **Single render + clip screenshots**
-   - avoids page-to-page HTML regeneration drift
-   - keeps output more stable and reproducible
-
-## Repository status
-
-The project includes:
+The project already includes:
 - unit tests for parsing, validation, normalization, rendering, and pagination
-- smoke tests for browser rendering
-- end-to-end tests for pipeline, CLI, error cases, and determinism
+- browser-oriented smoke/e2e coverage
+- realistic fixtures for images, Mermaid, and long-form technical content
 
-If you want to inspect the implementation progress and debugging trail, see:
-
-```text
-IMPLEMENTATION_LOG.md
-```
+If you want the implementation trail instead of the stable docs, read `IMPLEMENTATION_LOG.md`.

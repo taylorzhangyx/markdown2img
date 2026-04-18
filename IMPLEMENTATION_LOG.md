@@ -328,3 +328,37 @@
 - `npm run build` ✅ — rebuilt the bundled CLI after the cover density adjustments.
 - `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-152430`.
 - Visual QA on `001.png` confirmed the cover now feels less dense and still trustworthy/editorial; the main remaining refinement opportunity is line-break rhythm rather than block pressure.
+
+## 2026-04-18 15:34:01 CST
+
+### Cover size-up pass after summary shortening
+- Increased the cover summary size again in `src/stages/screenshot.ts` by nudging up the default autosized scale and min/max size range while keeping the recent density relaxation intact.
+- Slightly enlarged the lower-left signature block at the same time: avatar, author name, date, and the internal spacing all grew a little so the signature feels more intentional against the larger cover text.
+- Kept the same bundled `Noto Serif SC` cover font and quote-led composition, with only small quote/frame adjustments to preserve balance.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the cover size-up pass.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-153326`.
+- Visual QA on `001.png` confirmed the summary is visibly larger, the signature block is slightly larger, and no obvious layout regression was introduced.
+
+## 2026-04-18 15:38:40 CST
+
+### Overall cover scale-up pass
+- Enlarged the cover composition as a whole in `src/stages/screenshot.ts` by reducing the outer cover padding / border inset and letting the summary frame occupy more width, instead of only scaling the text in isolation.
+- Increased the cover summary autosize baseline/range again, slightly strengthened the quote mark, and nudged the signature block up one more step so the whole cover now reads larger overall rather than just "bigger text inside the same box".
+- Kept the same quote-led Noto Serif SC editorial system and verified the cover still preserves sufficient breathing room.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the overall cover scale-up pass.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-153801`.
+- Visual QA on `001.png` confirmed the overall cover composition reads visibly larger while staying balanced, with no obvious crowding or regression.
+
+## 2026-04-18 15:44:24 CST
+
+### Documentation refresh pass
+- Updated `README.md` to reflect the current product reality instead of the older 1080×1440 / `file://` / image-led-cover assumptions.
+- Added `docs/architecture.md` to document the end-to-end pipeline, module responsibilities, layout constants, and runtime asset flow.
+- Added `docs/design.md` to capture the current warm-light editorial design system, summary-led cover rationale, and visual review principles.
+- Added `docs/technical.md` to document the runtime stack, data model, frontmatter contract, cover/body rendering behavior, and operational constraints.
+- Prepared the repo for a single documentation + approved cover-iteration commit.
+
