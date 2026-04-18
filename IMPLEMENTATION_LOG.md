@@ -362,3 +362,19 @@
 - Added `docs/technical.md` to document the runtime stack, data model, frontmatter contract, cover/body rendering behavior, and operational constraints.
 - Prepared the repo for a single documentation + approved cover-iteration commit.
 
+## 2026-04-18 15:51:15 CST
+
+### Documentation retrospective pass
+- Revisited the full discussion/iteration history and expanded the docs with a retrospective layer instead of only describing the final state.
+- Updated `docs/design.md` with the agreed design style summary, rejected anti-patterns, typography conclusions, and reader/author/brand/product value points.
+- Updated `docs/architecture.md` with the most important engineering decisions from the iteration: why browser visual QA matters, why data-URI images mattered, why cover rendering became a dedicated subsystem, and why bundled assets are architectural concerns.
+- Updated `docs/technical.md` with practical engineering lessons from the debugging process, including asset-vs-layout diagnosis, summary-length as an input, font-loading as an implementation concern, and why perceived scale is multi-parameter.
+- Kept these retrospective conclusions in the corresponding long-lived docs so future iterations can inherit both the current state and the reasoning behind it.
+
+## 2026-04-18 16:09:37 CST
+
+### In-repo skill packaging pass
+- Added an in-repo copy of the `markdown2img-editorial-rendering` skill at `skills/markdown2img-editorial-rendering/SKILL.md` so the repository now carries a portable agent-facing usage guide alongside the Hermes-installed copy.
+- Updated `README.md` with a dedicated Agent skill section that explains the skill’s purpose and how to consume/install the repo copy for Hermes, Claude Code, Codex, and OpenClaw.
+- Documented the recommended pattern explicitly: keep the repo copy as the canonical source and symlink/copy or load it from each agent runtime as appropriate.
+

@@ -54,6 +54,91 @@ npx markdown2img article.md -o ./output
 
 ---
 
+## Agent skill
+
+The repo now includes a portable agent skill here:
+
+- `skills/markdown2img-editorial-rendering/SKILL.md`
+
+### What this skill is for
+
+This skill teaches an agent:
+- **when** to use `markdown2img`
+- **which files** to edit for cover/body/pagination/image/doc work
+- **which commands** to run for build/render/test
+- **how to validate output well** with real PNG visual QA
+- **what pitfalls** to avoid based on the actual iteration history
+
+It is meant for agents working on this repo/tool, not for generic Markdown rendering tasks.
+
+### Installation / use by agent runtime
+
+#### Hermes
+Install by copying or symlinking the skill folder into Hermes' skills tree:
+
+```bash
+mkdir -p ~/.hermes/skills/software-development
+ln -s /Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img/skills/markdown2img-editorial-rendering \
+  ~/.hermes/skills/software-development/markdown2img-editorial-rendering
+```
+
+Or copy instead of symlink:
+
+```bash
+mkdir -p ~/.hermes/skills/software-development
+cp -R /Users/taylorzyx/workspace/github-taylorzhangyx/markdown2img/skills/markdown2img-editorial-rendering \
+  ~/.hermes/skills/software-development/markdown2img-editorial-rendering
+```
+
+Then load/use the skill by name:
+- `software-development/markdown2img-editorial-rendering`
+
+#### Claude Code
+Claude Code does not share Hermes' native skill loader, so the repo copy should be used as a **project skill/instruction file**.
+
+Recommended approach:
+- keep the repo file at `skills/markdown2img-editorial-rendering/SKILL.md`
+- attach/load that file in the Claude Code session when working on this repo
+- or copy/symlink the same folder into whatever local skill/prompt library your Claude Code setup uses
+
+Minimum portable install target:
+- install object = `skills/markdown2img-editorial-rendering/`
+- primary file = `skills/markdown2img-editorial-rendering/SKILL.md`
+
+#### Codex
+Codex also treats this best as a **repo-local reusable instruction/skill file** unless your wrapper provides a native skills directory.
+
+Recommended approach:
+- point Codex at `skills/markdown2img-editorial-rendering/SKILL.md` when working on this repo
+- or copy/symlink the folder into your Codex wrapper's prompt/skills library if your setup supports file-based reusable skills
+
+Minimum portable install target:
+- install object = `skills/markdown2img-editorial-rendering/`
+- primary file = `skills/markdown2img-editorial-rendering/SKILL.md`
+
+#### OpenClaw
+For OpenClaw, install the same portable skill folder into the skills area used by your OpenClaw setup, or reference the repo-local file directly if your OpenClaw workflow supports repo-contained skills.
+
+Portable install object:
+- `skills/markdown2img-editorial-rendering/`
+
+Portable primary file:
+- `skills/markdown2img-editorial-rendering/SKILL.md`
+
+If your OpenClaw instance mirrors Hermes-style skill loading, keep the same category path:
+- `software-development/markdown2img-editorial-rendering`
+
+### Recommendation
+
+For this repo, the safest long-term pattern is:
+- keep the canonical version in-repo at `skills/markdown2img-editorial-rendering/SKILL.md`
+- symlink/copy it into Hermes/OpenClaw skill libraries when needed
+- for Claude Code and Codex, load the same repo file as reusable project instruction context
+
+This keeps one source of truth while still allowing different agent runtimes to consume it.
+
+---
+
 ## What the pipeline does
 
 ```text
