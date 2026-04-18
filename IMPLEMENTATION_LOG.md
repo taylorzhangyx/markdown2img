@@ -113,3 +113,64 @@
 ### Verification results
 - `npm test` ✅ — 10 test files passed, 32 tests passed.
 - `npm run build` ✅ — build succeeded and now copies `default-avatar.png` into `dist/assets/`.
+
+## 2026-04-18 10:34:09 CST
+
+### Body hierarchy and grouping pass
+- Strengthened body-page structure in `src/templates/theme-default.css` to make H2 sections read as clearer editorial modules: larger H2 scale, top rule, stronger top spacing, and tighter heading-to-opening rhythm.
+- Added a more explicit H3 system with UI-font treatment, lighter color, and a short accent rule so subsection headings no longer read like ordinary bold paragraphs.
+- Introduced block-role-aware styling for section openings, subsection openings, list intros, grouped list clusters, and takeaways so opening copy, example lists, and payoff paragraphs read as one coherent section instead of a flat markdown flow.
+- Updated `src/stages/render-html.ts` to emit `data-block-role` metadata derived from adjacent block structure, enabling CSS-only grouping without changing pagination semantics.
+- Added regression coverage in `tests/stages/render-html.test.ts` for the new structural roles and hierarchy classes.
+
+### Verification plan
+- Re-run targeted render-html tests plus the full test/build pipeline.
+- Re-render the article fixture and visually inspect the updated body pages for grouped block feel, H2/H3 separation, and opener/list/takeaway relationships.
+
+### Verification results
+- `npm test -- --run tests/stages/render-html.test.ts` ✅ — 2 tests passed after adding structural-role coverage.
+- `npm run build` ✅ — bundled CLI rebuilt successfully after the render/CSS pass.
+- `npm test` ✅ — 10 test files passed, 35 tests passed.
+- `node dist/cli.js tests/fixtures/agent-memory-design-comprehensive.md -o /tmp/markdown2img-renders` ✅ — rendered 10 PNG pages to `/tmp/markdown2img-renders/20260418-103946` for visual QA.
+- Visual QA on `003.png` and `004.png` confirmed clearer grouped sections, stronger opening/list/takeaway flow, and improved H3 legibility, with remaining room to tighten heading-to-section binding further.
+
+## 2026-04-18 10:43:00 CST
+
+### Body density and first-page rhythm tuning
+- Reduced perceived line density in `src/templates/theme-default.css` by narrowing the editorial text measure from `928px` to `864px` for heading/paragraph/list/blockquote blocks.
+- Increased core body sizing slightly (`30px` body copy, `34px` section-opening lead, `31px` subsection-opening lead) so the page reads a touch larger without changing the overall system.
+- Added extra separation below the first H1 block (`.block-heading-level-1`) so the opening paragraphs on body page 1 have a clearer paragraph break from the headline.
+
+### Verification plan
+- Rebuild and rerender the article fixture to confirm lower line density and better title-to-body spacing on page 2.
+
+## 2026-04-18 10:55:00 CST
+
+### Additional first-page readability tuning
+- Tightened the editorial measure again in `src/templates/theme-default.css` from `864px` to `848px` so each body line carries fewer Chinese characters.
+- Increased the base body sizing one more notch (`31px` body, `35px` section-opening lead, `32px` subsection-opening lead) to keep the page feeling slightly larger and easier to scan.
+- Increased the first body page H1 separation again by moving `.block-heading-level-1` bottom margin from `22px` to `34px`.
+
+### Verification plan
+- Rebuild and rerender the article fixture and inspect `002.png` to confirm the extra breathing room under the title and the slightly larger body copy.
+
+## 2026-04-18 11:09:00 CST
+
+### Font-weight and column-balance pass
+- Inspected locally available Chinese sans/黑体-style fonts on this machine and confirmed the best installed candidates are `Source Han Sans CN VF`, `Source Han Sans SC`, `Noto Sans CJK`, `PingFang SC`, `Hiragino Sans GB`, and `STHeiti`.
+- Updated `src/templates/theme-default.css` so body paragraphs/lists/tables switch to the sans stack (preferring `Source Han Sans CN VF`) at `font-weight: 500`, giving technical long-form copy a denser, more stable reading texture than the previous thinner serif body.
+- Darkened paragraph text slightly and deepened strong-emphasis color so body copy and highlighted phrases hold up better on the warm paper background.
+- Centered all major content blocks and constrained wide blocks with a centered max-width so left/right whitespace no longer feels left-heavy with a large dead zone on the right.
+
+### Verification plan
+- Rebuild, rerender, and visually inspect the first body page for heavier body text, a more comfortable centered reading column, and lower left/right whitespace imbalance.
+
+## 2026-04-18 11:15:20 CST
+
+### Title-font and justified-edge pass
+- Switched the title stack in `src/templates/theme-default.css` to prefer `Source Han Serif CN`, which is installed locally and reads more like a deliberate editorial headline face than the previous generic serif fallback.
+- Softened first-page H1 presence by reducing it from `58px/600` to `54px/550` and slightly relaxing the color/letterspacing so the title remains authoritative without overpowering the body copy.
+- Applied `text-align: justify` with `text-justify: inter-ideograph` to paragraph and list text so the main reading column presents cleaner left/right edges instead of a ragged right side.
+
+### Verification plan
+- Rebuild, rerender, and visually inspect the first body page for a calmer title and more even left/right text edges.

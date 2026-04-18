@@ -47,4 +47,20 @@ describe('full pipeline e2e', () => {
       await rm(baseDir, { recursive: true, force: true });
     }
   }, 60_000);
+
+  it('renders a summary-led cover page even when no cover_image is provided', async () => {
+    const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-summary-cover-'));
+
+    try {
+      const result = await runPipeline('tests/fixtures/basic-article.md', baseDir);
+      expect(result.files.map((file) => basename(file))).toEqual(['001.png', '002.png']);
+
+      for (const file of result.files) {
+        const dimensions = await readPngDimensions(file);
+        expect(dimensions).toEqual({ width: LAYOUT.PAGE_WIDTH, height: LAYOUT.PAGE_HEIGHT });
+      }
+    } finally {
+      await rm(baseDir, { recursive: true, force: true });
+    }
+  }, 60_000);
 });

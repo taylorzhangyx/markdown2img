@@ -25,7 +25,7 @@ describe('error paths', () => {
     const parsed = await parseArticle('tests/fixtures/empty-author.md');
     const validated = await validateArticle(parsed);
 
-    expect(validated.meta.author_name).toBe('AI 工程 Tay');
+    expect(validated.meta.author_name).toBe('AI工程Tay');
     expect(validated.meta.avatar_path).toContain('default-avatar.png');
   });
 

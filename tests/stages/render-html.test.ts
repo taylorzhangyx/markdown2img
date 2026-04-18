@@ -42,4 +42,20 @@ describe('renderHtml', () => {
     expect(html).toContain('<img src="file://');
     expect(html).toContain('Fixture image');
   });
+
+  it('adds structural roles that support stronger body grouping and hierarchy', async () => {
+    const parsed = await parseArticle('tests/fixtures/agent-memory-design-comprehensive.md');
+    const validated = await validateArticle(parsed);
+    const blocks = await normalizeArticle(validated);
+    const html = await renderHtml(validated.meta, blocks);
+
+    expect(html).toContain('data-block-role="section-opening"');
+    expect(html).toContain('data-block-role="subsection-opening"');
+    expect(html).toContain('data-block-role="list-intro"');
+    expect(html).toContain('data-block-role="list-cluster"');
+    expect(html).toContain('data-block-role="takeaway"');
+    expect(html).toContain('data-block-role="takeaway-callout"');
+    expect(html).toContain('block-heading-level-2');
+    expect(html).toContain('block-heading-level-3');
+  });
 });

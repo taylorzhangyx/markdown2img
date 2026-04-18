@@ -12,6 +12,7 @@ describe('validateArticle', () => {
     expect(validated.meta).toMatchObject({
       title: 'With Images',
       author_name: 'Taylor Zhang',
+      cover_summary: 'With Images',
     });
     expect(validated.meta.avatar_path).toContain('sample.png');
     expect(validated.meta.cover_image).toContain('sample.png');
@@ -25,12 +26,13 @@ describe('validateArticle', () => {
     expect(resolvedUrls[0]).toContain('sample.png');
   });
 
-  it('applies default author and avatar when author_name is missing', async () => {
+  it('applies default author, avatar, and derived cover summary when author_name is missing', async () => {
     const parsed = await parseArticle('tests/fixtures/missing-author.md');
     const validated = await validateArticle(parsed);
 
-    expect(validated.meta.author_name).toBe('AI 工程 Tay');
+    expect(validated.meta.author_name).toBe('AI工程Tay');
     expect(validated.meta.avatar_path).toContain('default-avatar.png');
+    expect(validated.meta.cover_summary).toBe('No Author');
   });
 
   it('throws asset_resolution_error for a missing referenced image', async () => {

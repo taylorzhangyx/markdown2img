@@ -14,6 +14,7 @@ export interface ArticleMeta {
   readonly date?: string;
   readonly theme?: string;
   readonly cover_image?: string;
+  readonly cover_summary?: string;
 }
 
 export interface ValidatedArticle {

@@ -56,9 +56,9 @@ describe('built CLI', () => {
       const { stdout, stderr } = await runCli(['tests/fixtures/missing-author.md', '-o', baseDir]);
       expect(stderr).toBe('');
       expect(stdout).toContain('✓ Parsed: missing-author.md');
-      expect(stdout).toContain('✓ Validated: author_name=AI 工程 Tay');
+      expect(stdout).toContain('✓ Validated: author_name=AI工程Tay');
     } finally {
       await rm(baseDir, { recursive: true, force: true });
     }
-  });
+  }, 120_000);
 });

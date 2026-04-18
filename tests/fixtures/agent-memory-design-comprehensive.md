@@ -2,7 +2,7 @@
 title: 记忆不是缓存：AI Agent 为什么需要分层记忆设计
 author_name: AI工程Tay
 date: 2026-04-18
-cover_image: ./with-images/sample.png
+cover_summary: 真正稳定的 Agent，不是把上下文越塞越多，而是把信息按层组织、按需注入、按价值保留。本文会从工作记忆、情境记忆与语义记忆三层出发，解释为什么分层记忆设计比单纯堆 prompt 更关键。
 theme: default
 ---
 

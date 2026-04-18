@@ -52,11 +52,9 @@ export async function runPipeline(inputPath: string, outputBase?: string): Promi
     const files: string[] = [];
     let pageOffset = 0;
 
-    if (validated.meta.cover_image) {
-      files.push(await renderCoverPage(page, validated.meta, outputDir, 1));
-      pageOffset = 1;
-      await loadArticlePage(page, html);
-    }
+    files.push(await renderCoverPage(page, validated.meta, outputDir, 1));
+    pageOffset = 1;
+    await loadArticlePage(page, html);
 
     files.push(...(await screenshotPages(page, plan, validated.meta, outputDir, pageOffset)));
 
