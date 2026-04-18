@@ -203,3 +203,16 @@
 - `npm run build` ✅ — bundled CLI rebuilt successfully.
 - `node dist/cli.js tests/fixtures/agent-memory-design-comprehensive.md -o /tmp/markdown2img-renders` ✅ — rendered 9 PNG pages to `/tmp/markdown2img-renders/20260418-121544`.
 - Visual QA on `007.png` confirmed the article-embedded local image now renders actual image content instead of a broken-image placeholder plus alt text.
+
+## 2026-04-18 12:44:47 CST
+
+### Heading-wrap control pass
+- Updated `src/templates/theme-default.css` so `text-wrap: balance` now applies only to body-page `h1`, and no longer applies to `h2`/`h3` headings.
+- This change was made after diagnosing that balanced wrapping on narrow Chinese technical headings could force unnatural mid-phrase breaks despite visible whitespace remaining in the line box.
+- Rebuilt the bundled CLI before validation so the rerender used the latest CSS from `dist/`.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after the CSS change.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered 8 pages to `/tmp/markdown2img-renders/20260418-124352`.
+- Visual QA on `003.png` confirmed the earlier `成功 / 率高` split is gone; the heading no longer breaks inside `成功率高` after removing balanced wrapping from `h2`.
+- The new wrap point moved to the title tail (`工作流稳 / 定`), which is better than the previous mid-phrase split but still indicates a follow-up typography decision may be needed if we want fully controlled Chinese heading breaks.

@@ -155,11 +155,11 @@ body {
 .block-heading h2,
 .block-heading h3 {
   line-height: var(--line-height-heading);
-  text-wrap: balance;
   color: var(--color-text);
 }
 
 .block-heading h1 {
+  text-wrap: balance;
   font-family: var(--font-title);
   font-size: 54px;
   font-weight: 550;
