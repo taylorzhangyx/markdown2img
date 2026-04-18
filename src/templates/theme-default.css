@@ -159,7 +159,6 @@ body {
 }
 
 .block-heading h1 {
-  text-wrap: balance;
   font-family: var(--font-title);
   font-size: 54px;
   font-weight: 550;

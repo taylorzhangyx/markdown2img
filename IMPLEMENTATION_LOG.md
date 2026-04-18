@@ -242,3 +242,28 @@
 - `npm run build` ✅ — rebuilt the bundled CLI after removing the section-opening lead styles.
 - `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-133857`.
 - Visual QA on `007.png` confirmed the `结语` first paragraph no longer appears larger than the following paragraphs; the body copy now reads as uniform prose instead of a lead-paragraph pattern.
+
+## 2026-04-18 13:48:59 CST
+
+### Replaced placeholder inline image with a real test asset
+- Verified the earlier `sample.png` issue was not a renderer failure but a fixture problem: the repo's old sample image was only `1×1` and effectively blank when stretched into the article image slot.
+- Copied the user-provided visible JPEG from the Obsidian vault into `tests/fixtures/with-images/harness-test-image.jpeg` to use as a real inline-image fixture asset.
+- Updated `tests/fixtures/with-images/facebook-engineering-style-8-pages.md` to reference `./harness-test-image.jpeg` instead of the blank `./sample.png` placeholder.
+- Rebuilt before validation so the rerender used the current image embedding pipeline.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after swapping in the real test image.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-134835`.
+- Visual QA on `004.png` confirmed the inline image now renders actual visible content (a warm hand-drawn scaffold/stack illustration) instead of a blank white placeholder.
+
+## 2026-04-18 13:57:23 CST
+
+### Removed H1 balanced wrapping
+- Removed `text-wrap: balance` from body-page `h1` in `src/templates/theme-default.css` after the user reported that the remaining H1 wrapping still felt balanced/artificial.
+- This change keeps H1 under the normal width constraint but lets the browser wrap it as ordinary text instead of rebalancing line lengths.
+- Rebuilt before validation so the latest CSS was used by the bundled CLI.
+
+### Verification results
+- `npm run build` ✅ — rebuilt the bundled CLI after removing H1 balanced wrapping.
+- `node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.md -o /tmp/markdown2img-renders` ✅ — rerendered the fixture to `/tmp/markdown2img-renders/20260418-135645`.
+- Visual QA on `001.png` confirmed the first body-page H1 no longer reads like an intentionally balanced two-line title; the wrap now looks more like normal automatic line breaking.
