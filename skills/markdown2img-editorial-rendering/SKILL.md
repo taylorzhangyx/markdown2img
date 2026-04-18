@@ -15,11 +15,7 @@ Use this skill when the task involves the `markdown2img` repository.
 
 Run all repo commands from the `markdown2img` repository root.
 
-In-repo skill path:
-
-`skills/markdown2img-editorial-rendering/SKILL.md`
-
-This skill is for **using and iterating on this tool**, not for generic Markdown rendering elsewhere.
+This skill is for **using and iterating on the tool**, not for generic Markdown rendering elsewhere.
 
 ## When to use
 
@@ -31,7 +27,7 @@ Use this skill if the user wants to:
 - update docs/readme/architecture/design/technical docs for this tool
 - validate changes with real rendered PNG output
 
-Typical requests:
+Use it especially when the user asks for things like:
 - “看一下渲染效果”
 - “cover 再调一下”
 - “正文排版优化一下”
@@ -64,6 +60,11 @@ Key docs to check before major work:
 - `docs/design.md`
 - `docs/technical.md`
 - `IMPLEMENTATION_LOG.md`
+- in-repo portable skill copy: `skills/markdown2img-editorial-rendering/SKILL.md`
+
+If the repo contains a newer in-repo skill copy than the Hermes-installed copy, prefer syncing from the repo copy so agent-facing instructions stay aligned with the actual project.
+
+For any repo-facing skill/docs/examples intended for public reuse, avoid hardcoded user-specific absolute paths. Prefer repo-relative paths, `$(pwd)`, or neutral placeholders.
 
 ---
 
@@ -120,6 +121,20 @@ After code changes:
 npm run build
 ```
 
+### 3.5 Execution model
+
+This repo does **not** live-compile TypeScript on every CLI run.
+
+Current behavior:
+- `npm run build` uses `tsup` to compile the TypeScript CLI into `dist/cli.js`
+- `node dist/cli.js ...` executes that **built artifact**
+- the package bin (`markdown2img`) also points at `./dist/cli.js`
+
+Practical implication:
+- after source changes, rebuild first or you will be testing stale output
+- this repo's normal local workflow is **build first, then run the built CLI**
+- if the user asks whether the tool is realtime-compiled, the correct answer is **no** for the current repo workflow
+
 ### 4. Render a representative fixture
 
 Preferred regression/preview command:
@@ -167,7 +182,7 @@ git commit -m "feat(rendering): ..."
 
 ## How to use the tool well
 
-### Prefer representative fixtures over toy files
+## Prefer representative fixtures over toy files
 
 Best default fixture:
 ```bash
@@ -176,7 +191,7 @@ node dist/cli.js tests/fixtures/with-images/facebook-engineering-style-8-pages.m
 
 Use toy fixtures only for targeted regression checks.
 
-### Treat visual QA as part of engineering
+## Treat visual QA as part of engineering
 
 For this repo, a change is not done if:
 - tests pass
@@ -191,14 +206,14 @@ For this repo, a change is not done if:
 - clipped content
 - mismatched typography tone
 
-### Think in systems, not isolated knobs
+## Think in systems, not isolated knobs
 
 Examples:
 - “make cover bigger” usually means changing padding, frame width, autosize bounds, quote size, and signature scale together
 - “cover text denser/lighter” is not just font size; it also involves line-height, measure, content length, and quote placement
 - “body easier to read” is often grouping/hierarchy/measure, not just color or one font-size bump
 
-### Respect the current style target
+## Respect the current style target
 
 The current target is:
 - warm light editorial
@@ -266,6 +281,37 @@ Check for:
 - overly narrow width constraints
 - heading size/weight mismatch
 
+### B2. Body text feels scattered or Sino-English rhythm feels mechanical
+Look at:
+- `src/templates/theme-default.css`
+
+Check in this order:
+- whether body line-height is too loose for the current size/weight (for this repo, `1.8` can drift into “scattered” on long mobile pages)
+- whether body paragraphs are using the sans `--font-ui` stack at a weight that feels too heavy/dense for mixed Chinese-English prose
+- whether `text-align: justify` + `text-justify: inter-ideograph` is making mixed-language lines feel stretched or mechanically spaced
+
+Important lesson from real article review:
+- a page can be readable yet still feel too loose for trust-building editorial prose
+- mixed Chinese/English discomfort may come more from rhythm/justification than from outright bad font selection
+- restore paragraph cohesion first, then revisit font-family strategy
+- if the prose still feels fluent-but-not-smooth after spacing fixes, inspect text texture mismatch: Chinese may feel denser/heavier while inline English still reads lighter/UI-like even when the font pairing is not obviously wrong
+- a successful next pass can be: keep left-aligned prose, move body copy from a heavy sans stack to the serif body stack, raise body size slightly, then tighten line-height and reduce weight so the larger serif body gains warmth without drifting back into heaviness
+- after that pass, the main remaining issue is often long inline English phrases drawing too much attention; solve those with measure/phrase handling before making the whole body bigger again
+- if the serif body still feels too thin on phones or the inline English seems to sit slightly higher/lighter than adjacent Chinese, suspect local fallback behavior rather than only CSS sizing
+- in that case, prefer a controlled bundled body font via `@font-face` in `src/stages/render-html.ts` (mirroring the cover strategy) so article prose stops depending on local `Songti SC` / `STSong` fallback differences
+- for this repo's current goals, Google Fonts candidates worth considering are `Noto Serif SC` and `Noto Sans SC`; for warm editorial long-form body prose, `Noto Serif SC` is the default better fit, while `Noto Sans SC` is the fallback option if the user wants a more product-like, modern, less literary body tone
+- when increasing mobile readability late in the tuning cycle, change variables in this order: (1) control the font source, (2) increase body weight slightly if prose still looks too thin on real phone screenshots, (3) only then increase body size / tweak content width / first-page top reserve, because larger body size can easily trigger new title-wrap or page-count regressions
+- when the user asks for roughly one fewer Chinese character per line, the most reliable small-step move is a combined pass: nudge `--font-size-body` up by about 1px and tighten `--content-width` modestly, then visually verify title wrapping and total page count before accepting the change
+- if the user says mixed Chinese/English lines still feel unlevel, the problem may be uncontrolled local serif fallbacks rather than size alone; inspect whether body prose is still relying on `Songti SC` / `STSong` / local stacks while the cover already uses a bundled controlled font
+- for this repo, Google Fonts candidates worth testing for body prose are mainly `Noto Serif SC` and `Noto Sans SC`; for the current warm editorial / trust-building target, prefer `Noto Serif SC` first and treat `Noto Sans SC` as a fallback if serif warmth proves too delicate or product voice is preferred
+- a high-value fix is to inject `@font-face` for the bundled `NotoSerifSC[wght].ttf` in body-page HTML (not just the cover), then point `--font-body` at that controlled family so Chinese and inline English share one stable source instead of OS-dependent fallback behavior
+- once controlled `Noto Serif SC` is in place, mobile readability can usually be improved safely by nudging body weight upward and darkening body text slightly, but do not keep increasing weight indefinitely; there is a clear boundary where editorial elegance starts turning into dark, over-inked text blocks
+- when a user asks for "roughly one fewer Chinese character per line", do not only increase body font size; pair a small body-size bump with a small reduction in `--content-width` so the density change is noticeable without destabilizing the whole layout
+
+- Google Fonts research for this project converged on `Noto Serif SC` as the strongest body candidate for warm, trust-building technical/editorial prose; `Noto Sans SC` is a viable fallback only if the user wants a more product/documentation tone
+- practical implementation pattern: inject a body `@font-face` in `src/stages/render-html.ts`, point it at the bundled `NotoSerifSC[wght].ttf`, update `--font-body` in `src/templates/theme-default.css` to prefer that controlled family, then slightly raise weight if the prose still feels too thin on screen
+- after that pass, the main remaining issue is often long inline English phrases drawing too much attention; solve those with measure/phrase handling before making the whole body bigger again
+
 ### C. Local image appears broken or blank
 Check in this order:
 1. does the asset actually exist?
@@ -285,6 +331,25 @@ Update:
 - `docs/architecture.md` for pipeline/ownership
 - `docs/design.md` for style principles
 - `docs/technical.md` for contracts/implementation details
+
+### F. Regenerate a real Obsidian article and overwrite its published PNGs
+Use this when the user gives you an Obsidian note path/title and says things like:
+- “再生成一次，覆盖原来的 img 文件”
+- “用新版样式把这篇文章重渲染一遍”
+- “把 Writing 目录里的那组图替换掉”
+
+Recommended workflow:
+1. Resolve the active vault first (`obsidian-cli print-default --path-only`) instead of guessing the vault path.
+2. Locate the exact source note with `search_files(target='files')` using the article title/path.
+3. Inspect whether the existing exported PNGs already live next to the note or in the intended target directory. Do not assume their location.
+4. Render to a temp output base first, e.g. `/tmp/markdown2img-renders`, and capture the exact timestamped output directory.
+5. Only after the render succeeds, delete/replace the target `001.png`, `002.png`, ... files in the intended directory.
+6. Verify replacement by listing the numbered PNGs and checking that the expected files exist with non-zero sizes.
+
+Why this workflow matters:
+- the CLI writes into a new timestamped directory, so direct in-place overwrite is not the native behavior
+- rendering to temp first prevents partial replacement if the render fails
+- users may refer to “original img files” loosely, so target discovery must happen before deletion/copying
 
 ---
 
@@ -319,7 +384,7 @@ The discussion showed that cover quality depends on:
 ### 5. Do not forget bundled assets when introducing new runtime dependencies
 If you add fonts or other runtime files, also update build-copy behavior (currently via `tsup.config.ts`).
 
-### 6. Do not skip `IMPLEMENTATION_LOG.md` for meaningful renderer changes
+### 6. Do not skip IMPLEMENTATION_LOG.md for meaningful renderer changes
 This repo has gone through many iterative visual/engineering decisions. The log is part of project memory.
 
 ---
@@ -340,7 +405,7 @@ If any one of these is missing, the task is usually not fully done.
 
 ## Recommended response style when using this skill
 
-When reporting progress:
+When reporting progress to the user:
 - be concrete
 - say what file changed
 - say what command you ran

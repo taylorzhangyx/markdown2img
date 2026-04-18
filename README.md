@@ -40,17 +40,26 @@ npx playwright install chromium
 npm run build
 ```
 
+`npm run build` uses `tsup` to compile the TypeScript CLI into `dist/cli.js` and copy required runtime assets into `dist/`.
+
 ### Run
 
 ```bash
 node dist/cli.js article.md -o ./output
 ```
 
-Or during development:
+Execution model note:
+- the repo workflow is **build first, then run the built CLI**
+- `node dist/cli.js ...` runs the last built artifact; it does **not** live-compile TypeScript on each invocation
+- if you change source files, run `npm run build` again before rerunning the CLI
+
+Or during development / after install:
 
 ```bash
 npx markdown2img article.md -o ./output
 ```
+
+The package bin also points at `./dist/cli.js`, so this is still a built-artifact workflow rather than realtime TypeScript execution.
 
 ---
 

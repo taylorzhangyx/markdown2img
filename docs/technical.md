@@ -164,6 +164,7 @@ The article body is rendered as one tall HTML document.
 
 `render-html.ts` is responsible for:
 - inlining CSS from `src/templates/theme-default.css`
+- injecting body-font `@font-face` rules for bundled `Noto Serif SC`
 - inlining Mermaid runtime
 - converting normalized blocks into measurable DOM sections
 - attaching classes/data attributes for styling and measurement
@@ -285,6 +286,14 @@ npm run build
 - bundled Noto Serif SC font files
 
 This is important because the built CLI relies on these assets at runtime.
+
+### Execution model
+The current repo workflow is **prebuild, then execute**:
+- `npm run build` compiles TypeScript into `dist/cli.js`
+- `node dist/cli.js ...` runs that built file
+- the package bin (`markdown2img`) also points at `./dist/cli.js`
+
+So for local development, this tool is **not** recompiling TypeScript live on every run. If source files change, the CLI must be rebuilt before the next execution.
 
 ---
 
