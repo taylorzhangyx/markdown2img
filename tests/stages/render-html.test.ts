@@ -39,7 +39,7 @@ describe('renderHtml', () => {
     expect(html).toContain('data-block-type="mermaid"');
     expect(html).toContain('<pre class="mermaid">');
     expect(html).toContain('<table>');
-    expect(html).toContain('<img src="file://');
+    expect(html).toContain('<img src="data:image/png;base64,');
     expect(html).toContain('Fixture image');
   });
 

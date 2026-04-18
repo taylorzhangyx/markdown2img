@@ -34,7 +34,7 @@ describe('normalizeArticle', () => {
     expect(blocks[2]?.type === 'code' ? blocks[2].html : '').toContain('<pre><code class="language-ts">');
   });
 
-  it('converts image nodes into image blocks with file URLs', async () => {
+  it('converts image nodes into image blocks with embedded data URIs', async () => {
     const parsed = await parseArticle('tests/fixtures/with-images/article.md');
     const validated = await validateArticle(parsed);
     const blocks = await normalizeArticle(validated);
@@ -44,7 +44,7 @@ describe('normalizeArticle', () => {
       type: 'image',
       alt: 'Sample alt',
     });
-    expect(imageBlock?.type === 'image' ? imageBlock.fileUrl : '').toMatch(/^file:\/\//);
+    expect(imageBlock?.type === 'image' ? imageBlock.fileUrl : '').toMatch(/^data:image\/png;base64,/);
     expect(imageBlock?.type === 'image' ? imageBlock.src : '').toContain('sample.png');
   });
 

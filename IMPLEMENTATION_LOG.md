@@ -188,11 +188,18 @@
 - `node dist/cli.js tests/fixtures/agent-memory-design-comprehensive.md -o /tmp/markdown2img-renders` ✅ — rendered 10 PNG pages to `/tmp/markdown2img-renders/20260418-113112`.
 - Visual QA confirmed the previous bottom-edge stray text on page `003.png` is gone, and the later section pages now start cleanly without the earlier clipped/missing-text feeling near the top.
 
-## 2026-04-18 11:36:08 CST
+## 2026-04-18 11:58:00 CST
 
-### Taller-page and tighter-table follow-up
-- Increased canonical page height again from `1640` to `1800` in `src/types.ts` and theme CSS, raising usable body capacity to `1640` (`1520` on the first body page) so each page carries about three more lines.
-- Tightened table presentation in `src/templates/theme-default.css` by reducing table font size from `24px` to `22px` and cell padding from `13×16` to `10×12`, making table information read more compactly.
+### Embedded in-article image fix
+- Diagnosed the in-article image failure on the latest render: the article page showed a broken-image icon plus alt text instead of the local reference image, meaning layout was fine but browser loading of the local asset inside article HTML was not.
+- Updated `src/stages/normalize.ts` so article image blocks embed local images as base64 data URIs instead of `file://` URLs, matching the already-stable avatar strategy and removing dependence on browser local-file loading behavior inside `page.setContent()`.
+- Updated normalize/render regression tests to assert embedded `data:image/...;base64,...` sources for in-article images.
 
 ### Verification plan
-- Rebuild, rerender, and visually confirm the taller pages fit more text per image and the table block feels tighter.
+- Rerender the full representative article and visually confirm that the embedded local image displays actual content instead of a broken placeholder.
+
+### Verification results
+- `npm test -- --run tests/stages/normalize.test.ts tests/stages/render-html.test.ts` ✅ — 6 targeted tests passed after switching article images to embedded data URIs.
+- `npm run build` ✅ — bundled CLI rebuilt successfully.
+- `node dist/cli.js tests/fixtures/agent-memory-design-comprehensive.md -o /tmp/markdown2img-renders` ✅ — rendered 9 PNG pages to `/tmp/markdown2img-renders/20260418-121544`.
+- Visual QA on `007.png` confirmed the article-embedded local image now renders actual image content instead of a broken-image placeholder plus alt text.

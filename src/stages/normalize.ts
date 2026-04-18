@@ -3,7 +3,7 @@ import { unified } from 'unified';
 import remarkRehype from 'remark-rehype';
 import rehypeStringify from 'rehype-stringify';
 
-import { toFileUrl } from '../lib/image-handler.js';
+import { toBase64DataUri } from '../lib/image-handler.js';
 import type { ContentBlock, ValidatedArticle } from '../types.js';
 
 function nodeToHtml(node: RootContent): string {
@@ -49,7 +49,7 @@ function normalizeImage(node: Image): ContentBlock {
     type: 'image',
     src: node.url,
     alt: node.alt ?? undefined,
-    fileUrl: toFileUrl(node.url),
+    fileUrl: toBase64DataUri(node.url),
   };
 }
 
