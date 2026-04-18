@@ -295,6 +295,75 @@ Trade-off:
 
 ---
 
+## Important engineering decisions from the full iteration
+
+This section records the highest-value engineering conclusions that emerged from the full debugging/design loop.
+
+### 1. Render correctness must be judged in the browser, not only in tests
+For this project, structural tests are necessary but not sufficient.
+
+Why:
+- line wrapping
+- heading rhythm
+- image visibility
+- cover balance
+- pagination quality
+
+all ultimately depend on the rendered PNG, not only on AST or HTML correctness.
+
+### 2. Image transport needed to become data-URI based
+A key engineering shift was moving local article images away from `file://` loading inside `page.setContent()` and toward base64 data URIs.
+
+Why this mattered:
+- it eliminated a fragile runtime dependency in Chromium content loading
+- it aligned body image transport with avatar embedding
+- it made the screenshot pipeline much more reliable
+
+### 3. Cover rendering needed to be its own system
+The discussion proved that the cover could not be treated like a slightly different first content page.
+
+Architecturally, this led to:
+- dedicated cover HTML
+- dedicated font loading
+- dedicated autosizing logic
+- dedicated readiness signaling before screenshot
+
+### 4. Typography and pagination are coupled system concerns
+Changes that look purely visual often affect:
+- page count
+- clip positions
+- perceived section integrity
+- screenshot artifact risk
+
+That means typography changes cannot be treated as isolated CSS polish; they are architectural inputs to the renderer.
+
+### 5. Bundled runtime assets are part of the architecture, not just packaging
+The final cover system depends on assets being shipped with the build:
+- font files
+- Mermaid runtime
+- theme CSS
+- default avatar
+
+That makes asset copying/build configuration part of the rendering architecture itself.
+
+---
+
+## Value delivered by the current architecture
+
+### Determinism value
+The system is now less sensitive to ad hoc local browser asset behavior because critical assets are embedded or bundled.
+
+### Debuggability value
+The pipeline has clearer stage boundaries, making it easier to isolate failures to parsing, validation, normalization, rendering, pagination, or screenshoting.
+
+### Product value
+The renderer can now support a much stronger editorial cover system without introducing a second app/UI surface.
+
+### Maintenance value
+Important design decisions were implemented as explicit pipeline behavior, not as hidden designer intuition. That makes future iteration safer.
+
+---
+
 ## Runtime assets
 
 Bundled assets currently include:

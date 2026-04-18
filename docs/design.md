@@ -214,6 +214,74 @@ Recent major design shifts include:
 
 ---
 
+## Retrospective: what the discussion converged on
+
+This section captures the most important conclusions from the full design discussion/iteration process.
+
+### Final style summary
+The agreed style is:
+- **warm light editorial** rather than pure-white product UI
+- **trust-building** rather than attention-grabbing
+- **slow-reading** rather than scannable marketing poster
+- **technical essay** rather than dashboard/module aesthetics
+- **typography-led** rather than decoration-led
+
+### Cover-specific conclusions
+The cover should:
+- behave like a **quote / summary page**, not a title banner
+- explain the article immediately through `cover_summary`
+- use a **quiet signature** in the lower-left instead of a creator badge feel
+- keep the gold-brown quote accent because it adds warmth without becoming noisy
+- grow as a **composition**, not only as isolated font size changes
+
+### Body-page conclusions
+The body should:
+- reduce reading friction before chasing more visual polish
+- use hierarchy and grouping to show structure at a glance
+- avoid awkward Chinese balancing/wrapping tricks that look designed rather than natural
+- rely on typography and spacing more than on decorative H2/H3 ornaments
+
+### Typography conclusions
+The discussion established these typography priorities:
+- Chinese and inline English must feel like one system, not two adjacent systems
+- official bundled fonts are preferred over opportunistic local-font mixes when the local mix feels mismatched
+- larger text is good only when paired with breathing room; otherwise it becomes pressure, not authority
+- quote marks, headings, and signature text should all feel like one editorial family
+
+### Explicit anti-patterns discovered during iteration
+The discussion repeatedly rejected these directions:
+- generic title-cover layouts
+- over-decorated heading systems
+- balanced Chinese heading wraps that split phrases awkwardly
+- visual polish that improves beauty but not readability
+- typography that feels fashionable but not trustworthy
+
+---
+
+## Value of the current design direction
+
+The current design system creates value in four ways:
+
+### 1. Reader value
+- easier to keep reading on a phone
+- faster comprehension of structure
+- less visual fatigue
+
+### 2. Author value
+- Markdown can become publishable cards without design-tool relayout
+- one coherent visual system can be reused across articles
+- cover quality no longer depends on having a hero image
+
+### 3. Brand value
+- output looks more like thoughtful publication design than AI-content commodity templates
+- trust comes from restraint and clarity, not from loud styling
+
+### 4. Product value
+- the renderer now has a clearer visual identity
+- future design work has a stable reference style instead of vague “make it nicer” goals
+
+---
+
 ## What to preserve in future design work
 
 If the visual system is extended later, preserve these qualities:

@@ -309,6 +309,74 @@ This project is unusual in that visual QA is part of the technical validation su
 
 ---
 
+## Important engineering points captured from the full discussion
+
+### 1. Visual bugs often come from data and assets, not only from layout code
+A recurring lesson was that apparently broken rendering can come from:
+- blank placeholder assets
+- path syntax problems
+- mismatched font sources
+- invalid assumptions about browser file loading
+
+So technical debugging must inspect both rendering code and the underlying content/asset reality.
+
+### 2. Cover quality depends on content length control as much as CSS
+The cover system improved not only because of CSS/font changes, but also because the test `cover_summary` was iteratively shortened and normalized.
+
+Technical implication:
+- content contract and renderer behavior are co-designed
+- cover tuning should consider both summary text and layout code
+
+### 3. Font loading is an implementation concern, not just a design preference
+Switching to an official bundled font required:
+- sourcing a redistributable font
+- shipping the font in source and dist
+- loading it via `@font-face`
+- waiting for `document.fonts.ready`
+
+That is an engineering workflow, not just a design choice.
+
+### 4. “Bigger” needed to be modeled as system scale, not just text size
+The later cover iterations showed that making the cover feel larger required coordinated changes across:
+- outer padding
+- frame width
+- autosize bounds
+- quote mark sizing
+- signature block sizing
+
+This is a useful implementation lesson for future renderer changes: perceived scale is multi-parameter, not single-parameter.
+
+### 5. Documentation must track the real product, not the original prototype
+By the end of the iteration, some earlier docs were stale in key ways:
+- page size
+- asset-loading method
+- cover design model
+- metadata behavior
+
+A technical lesson here is that rendering systems evolve quickly, and stale docs become operational bugs for future work.
+
+---
+
+## Value points
+
+### Engineering value
+The current implementation reduced a class of flaky rendering issues by embedding/bundling critical assets and by waiting on explicit browser readiness conditions.
+
+### Workflow value
+The renderer now supports a more realistic Markdown-to-publishable-cards workflow, especially for technical long-form content.
+
+### Design-system value
+Important visual decisions are now encoded in code and docs instead of living only in iterative chat feedback.
+
+### Future-iteration value
+The project now has a clearer baseline for what counts as regression:
+- more reading friction
+- worse Chinese wrapping
+- weaker mixed-language typography
+- less trustworthy cover behavior
+
+---
+
 ## Known technical constraints
 
 - local-file workflow only
