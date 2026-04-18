@@ -63,4 +63,50 @@ describe('built CLI', () => {
       await rm(baseDir, { recursive: true, force: true });
     }
   }, 120_000);
+
+  it('prints JSON output and writes directly into a fixed output directory', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'markdown2img-cli-json-fixed-'));
+
+    try {
+      const { stdout, stderr } = await runCli([
+        'tests/fixtures/basic-article.md',
+        '--output-dir',
+        outputDir,
+        '--overwrite',
+        '--json',
+      ]);
+
+      const payload = JSON.parse(stdout);
+      expect(payload.outputMode).toBe('fixed');
+      expect(payload.outputDir).toBe(outputDir);
+      expect(payload.renderedCover).toBe(true);
+      expect(payload.renderedBody).toBe(true);
+      expect(payload.files.map((file: string) => basename(file))).toEqual(['001.png', '002.png']);
+      expect(stderr).toContain('✓ Parsed: basic-article.md');
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it('lets CLI metadata overrides replace author and cover summary for rendering', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'markdown2img-cli-overrides-'));
+
+    try {
+      const { stdout, stderr } = await runCli([
+        'tests/fixtures/basic-article.md',
+        '--output-dir',
+        outputDir,
+        '--overwrite',
+        '--author-name',
+        'Override Author',
+        '--cover-summary',
+        'Override summary',
+      ]);
+
+      expect(stderr).toBe('');
+      expect(stdout).toContain('✓ Validated: author_name=Override Author');
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
+  }, 120_000);
 });

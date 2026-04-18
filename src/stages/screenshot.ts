@@ -47,6 +47,22 @@ function getPageFileName(pageNumber: number): string {
   return `${String(pageNumber).padStart(3, '0')}.png`;
 }
 
+export function getBodyFolioLabel(bodyPageNumber: number): string {
+  return String(bodyPageNumber);
+}
+
+export function computeEndMarkerTop(params: {
+  contentBottom: number;
+  topInset: number;
+  pageHeight: number;
+  endMarkerOffset: number;
+  maxEndMarkerBlockHeight: number;
+}): number {
+  const unclampedTop = Math.floor(params.contentBottom + params.endMarkerOffset);
+  const maxTop = Math.max(params.pageHeight - params.maxEndMarkerBlockHeight, params.topInset);
+  return Math.min(Math.max(unclampedTop, params.topInset), maxTop);
+}
+
 async function ensureScreenshotSurface(page: Page, plan: PageBreakPlan): Promise<void> {
   const requiredHeight = Math.max(
     LAYOUT.PAGE_HEIGHT,
@@ -83,8 +99,18 @@ async function clearOverlay(page: Page): Promise<void> {
 
 async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPayload): Promise<void> {
   await clearOverlay(page);
+  const topInset = pageSpec.isFirstPage
+    ? LAYOUT.PAGE_PADDING + LAYOUT.FIRST_PAGE_IDENTITY
+    : LAYOUT.PAGE_PADDING;
+  const endMarkerTop = computeEndMarkerTop({
+    contentBottom: pageSpec.contentBottom,
+    topInset,
+    pageHeight: LAYOUT.PAGE_HEIGHT,
+    endMarkerOffset: LAYOUT.END_MARKER_OFFSET,
+    maxEndMarkerBlockHeight: 220,
+  });
   await page.evaluate(
-    ({ spec, overlayMeta, layout }) => {
+    ({ spec, overlayMeta, layout, overlayState }) => {
       const overlay = document.createElement('div');
       overlay.id = 'page-overlay';
       overlay.style.cssText = [
@@ -106,9 +132,7 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         return mask;
       };
 
-      const topContentInset = spec.isFirstPage
-        ? layout.pagePadding + layout.firstPageIdentityReserve
-        : layout.pagePadding;
+      const topContentInset = overlayState.topInset;
       const bottomMaskTop = Math.max(Math.min(Math.floor(spec.contentBottom - maskOverscan), layout.pageHeight), 0);
 
       overlay.appendChild(
@@ -191,13 +215,28 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         overlay.appendChild(identity);
       }
 
+      const folio = document.createElement('div');
+      folio.textContent = overlayState.folioLabel;
+      folio.style.cssText = [
+        'position:absolute',
+        'right:132px',
+        'bottom:72px',
+        'font-family:"CoverNotoSerifSC", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", "Songti SC", "STSong", serif',
+        'font-size:22px',
+        'font-weight:500',
+        'line-height:1',
+        'letter-spacing:0.01em',
+        'color:#857B70',
+      ].join(';');
+      overlay.appendChild(folio);
+
       if (spec.hasEndMarker) {
         const endMarker = document.createElement('div');
         endMarker.style.cssText = [
           'position:absolute',
           'left:0',
           'right:0',
-          'bottom:120px',
+          `top:${overlayState.endMarkerTop}px`,
           'display:flex',
           'align-items:center',
           'justify-content:center',
@@ -228,6 +267,11 @@ async function injectOverlay(page: Page, pageSpec: PageSpec, meta: OverlayMetaPa
         pageHeight: LAYOUT.PAGE_HEIGHT,
         pagePadding: LAYOUT.PAGE_PADDING,
         firstPageIdentityReserve: LAYOUT.FIRST_PAGE_IDENTITY,
+      },
+      overlayState: {
+        topInset,
+        endMarkerTop,
+        folioLabel: getBodyFolioLabel(pageSpec.bodyPageNumber),
       },
     },
   );

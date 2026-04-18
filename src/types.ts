@@ -23,6 +23,23 @@ export interface ValidatedArticle {
   readonly sourceDir: string;
 }
 
+export interface RuntimeMetaOverrides {
+  readonly authorName?: string;
+  readonly avatarPath?: string;
+  readonly date?: string;
+  readonly coverSummary?: string;
+}
+
+export interface PipelineOptions {
+  readonly outputBase?: string;
+  readonly outputDir?: string;
+  readonly overwrite?: boolean;
+  readonly coverOnly?: boolean;
+  readonly json?: boolean;
+  readonly metaOverrides?: RuntimeMetaOverrides;
+  readonly log?: (line: string) => void;
+}
+
 export type ContentBlock =
   | { readonly type: 'heading'; readonly level: 1 | 2 | 3; readonly html: string }
   | { readonly type: 'paragraph'; readonly html: string }
@@ -50,6 +67,8 @@ export interface PageSpec {
   readonly isFirstPage: boolean;
   readonly isLastPage: boolean;
   readonly hasEndMarker: boolean;
+  readonly bodyPageNumber: number;
+  readonly bodyPageCount: number;
 }
 
 export interface PageBreakPlan {
@@ -65,4 +84,5 @@ export const LAYOUT = {
   FIRST_PAGE_IDENTITY: 120,
   FIRST_PAGE_USABLE: 1520,
   END_MARKER_HEIGHT: 120,
+  END_MARKER_OFFSET: 72,
 } as const;

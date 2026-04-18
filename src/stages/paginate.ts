@@ -78,6 +78,8 @@ export function computePageBreaks(measurements: readonly BlockMeasurement[]): Pa
       isFirstPage,
       isLastPage: options.isLastPage,
       hasEndMarker: options.hasEndMarker,
+      bodyPageNumber: 0,
+      bodyPageCount: 0,
     });
     pageIndex += 1;
   };
@@ -122,13 +124,19 @@ export function computePageBreaks(measurements: readonly BlockMeasurement[]): Pa
         isFirstPage: false,
         isLastPage: true,
         hasEndMarker: true,
+        bodyPageNumber: 0,
+        bodyPageCount: 0,
       });
     }
   }
 
   const lastMeasurement = measurements[measurements.length - 1]!;
   return {
-    pages,
+    pages: pages.map((page, index, allPages) => ({
+      ...page,
+      bodyPageNumber: index + 1,
+      bodyPageCount: allPages.length,
+    })),
     totalContentHeight: lastMeasurement.top + lastMeasurement.height,
   };
 }

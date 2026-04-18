@@ -42,4 +42,21 @@ describe('validateArticle', () => {
       code: 'asset_resolution_error',
     });
   });
+
+  it('lets runtime overrides replace cover summary, author name, date, and avatar path', async () => {
+    const parsed = await parseArticle('tests/fixtures/with-images/article.md');
+    const validated = await validateArticle(parsed, {
+      authorName: 'Override Author',
+      avatarPath: './sample.png',
+      date: '2099-01-01',
+      coverSummary: 'Override summary',
+    });
+
+    expect(validated.meta).toMatchObject({
+      author_name: 'Override Author',
+      date: '2099-01-01',
+      cover_summary: 'Override summary',
+    });
+    expect(validated.meta.avatar_path).toContain('sample.png');
+  });
 });

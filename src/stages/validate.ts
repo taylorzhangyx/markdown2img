@@ -6,7 +6,7 @@ import type { Image, Paragraph, PhrasingContent, Root } from 'mdast';
 import { visit } from 'unist-util-visit';
 
 import { Markdown2ImgError } from '../lib/error.js';
-import type { ArticleMeta, ParsedArticle, ValidatedArticle } from '../types.js';
+import type { ArticleMeta, ParsedArticle, RuntimeMetaOverrides, ValidatedArticle } from '../types.js';
 
 const DEFAULT_AUTHOR_NAME = 'AI工程Tay';
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
@@ -118,11 +118,11 @@ function deriveCoverSummary(article: ParsedArticle): string | undefined {
   return normalizeSummaryText(readOptionalString(article.frontmatter, 'title') ?? '', 120);
 }
 
-export async function validateArticle(article: ParsedArticle): Promise<ValidatedArticle> {
-  const authorName = readOptionalString(article.frontmatter, 'author_name') ?? DEFAULT_AUTHOR_NAME;
-  const avatarPath = readOptionalString(article.frontmatter, 'avatar_path');
+export async function validateArticle(article: ParsedArticle, overrides: RuntimeMetaOverrides = {}): Promise<ValidatedArticle> {
+  const authorName = overrides.authorName?.trim() || readOptionalString(article.frontmatter, 'author_name') || DEFAULT_AUTHOR_NAME;
+  const avatarPath = overrides.avatarPath?.trim() || readOptionalString(article.frontmatter, 'avatar_path');
   const coverImage = readOptionalString(article.frontmatter, 'cover_image');
-  const coverSummary = deriveCoverSummary(article);
+  const coverSummary = overrides.coverSummary?.trim() || deriveCoverSummary(article);
   const resolvedAvatarPath = avatarPath
     ? resolveExistingAsset(article.sourceDir, avatarPath, 'Avatar asset')
     : resolveDefaultAvatarPath();
@@ -131,7 +131,7 @@ export async function validateArticle(article: ParsedArticle): Promise<Validated
     title: readOptionalString(article.frontmatter, 'title') ?? '',
     author_name: authorName,
     avatar_path: resolvedAvatarPath,
-    date: readOptionalString(article.frontmatter, 'date'),
+    date: overrides.date?.trim() || readOptionalString(article.frontmatter, 'date'),
     theme: readOptionalString(article.frontmatter, 'theme'),
     ...(coverImage
       ? { cover_image: resolveExistingAsset(article.sourceDir, coverImage, 'Cover image') }

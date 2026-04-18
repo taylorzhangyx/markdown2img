@@ -14,7 +14,7 @@ describe('full pipeline e2e', () => {
     const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-e2e-'));
 
     try {
-      const result = await runPipeline('tests/fixtures/full-article.md', baseDir);
+      const result = await runPipeline('tests/fixtures/full-article.md', { outputBase: baseDir });
       expect(basename(result.outputDir)).toMatch(/^\d{8}-\d{6}$/);
       expect(result.files.length).toBeGreaterThan(0);
 
@@ -36,7 +36,7 @@ describe('full pipeline e2e', () => {
     const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-cover-'));
 
     try {
-      const result = await runPipeline('tests/fixtures/with-images/article.md', baseDir);
+      const result = await runPipeline('tests/fixtures/with-images/article.md', { outputBase: baseDir });
       expect(result.files.map((file) => basename(file))).toEqual(['001.png', '002.png']);
 
       for (const file of result.files) {
@@ -52,13 +52,26 @@ describe('full pipeline e2e', () => {
     const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-summary-cover-'));
 
     try {
-      const result = await runPipeline('tests/fixtures/basic-article.md', baseDir);
+      const result = await runPipeline('tests/fixtures/basic-article.md', { outputBase: baseDir });
       expect(result.files.map((file) => basename(file))).toEqual(['001.png', '002.png']);
 
       for (const file of result.files) {
         const dimensions = await readPngDimensions(file);
         expect(dimensions).toEqual({ width: LAYOUT.PAGE_WIDTH, height: LAYOUT.PAGE_HEIGHT });
       }
+    } finally {
+      await rm(baseDir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('renders only the cover when coverOnly is enabled', async () => {
+    const baseDir = await mkdtemp(join(tmpdir(), 'markdown2img-cover-only-'));
+
+    try {
+      const result = await runPipeline('tests/fixtures/basic-article.md', { outputBase: baseDir, coverOnly: true });
+      expect(result.files.map((file) => basename(file))).toEqual(['001.png']);
+      expect(result.renderedCover).toBe(true);
+      expect(result.renderedBody).toBe(false);
     } finally {
       await rm(baseDir, { recursive: true, force: true });
     }

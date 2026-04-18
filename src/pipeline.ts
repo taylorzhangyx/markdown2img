@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import { createBrowser, createPage } from './lib/browser.js';
-import { createOutputDir, resolveOutputBase } from './lib/fs-utils.js';
+import { prepareOutputDir } from './lib/fs-utils.js';
 import { waitForMermaid } from './lib/mermaid-handler.js';
 import { normalizeArticle } from './stages/normalize.js';
 import { computePageBreaks, measureBlocks } from './stages/paginate.js';
@@ -9,10 +9,15 @@ import { parseArticle } from './stages/parse.js';
 import { renderHtml } from './stages/render-html.js';
 import { renderCoverPage, screenshotPages } from './stages/screenshot.js';
 import { validateArticle } from './stages/validate.js';
+import type { PipelineOptions } from './types.js';
 
 export interface PipelineResult {
+  readonly outputMode: 'timestamped' | 'fixed';
   readonly outputDir: string;
   readonly files: readonly string[];
+  readonly pageCount: number;
+  readonly renderedCover: boolean;
+  readonly renderedBody: boolean;
 }
 
 async function loadArticlePage(page: Awaited<ReturnType<typeof createPage>>, html: string): Promise<void> {
@@ -28,43 +33,54 @@ async function loadArticlePage(page: Awaited<ReturnType<typeof createPage>>, htm
   await waitForMermaid(page);
 }
 
-export async function runPipeline(inputPath: string, outputBase?: string): Promise<PipelineResult> {
+export async function runPipeline(inputPath: string, options: PipelineOptions = {}): Promise<PipelineResult> {
+  const log = options.log ?? ((line: string) => console.log(line));
+
   const parsed = await parseArticle(inputPath);
-  console.log(`✓ Parsed: ${basename(parsed.sourcePath)}`);
+  log(`✓ Parsed: ${basename(parsed.sourcePath)}`);
 
-  const validated = await validateArticle(parsed);
+  const validated = await validateArticle(parsed, options.metaOverrides);
   const blocks = await normalizeArticle(validated);
-  console.log(`✓ Validated: author_name=${validated.meta.author_name}, blocks=${blocks.length}`);
+  log(`✓ Validated: author_name=${validated.meta.author_name}, blocks=${blocks.length}`);
 
-  const html = await renderHtml(validated.meta, blocks);
-  const baseDir = resolveOutputBase(inputPath, outputBase);
-  const outputDir = createOutputDir(baseDir);
+  const preparedOutput = await prepareOutputDir({
+    inputPath,
+    outputBase: options.outputBase,
+    outputDir: options.outputDir,
+    overwrite: options.overwrite,
+  });
 
   const browser = await createBrowser();
   const page = await createPage(browser);
 
   try {
-    await loadArticlePage(page, html);
-
-    const measurements = await measureBlocks(page);
-    const plan = computePageBreaks(measurements);
-
     const files: string[] = [];
-    let pageOffset = 0;
 
-    files.push(await renderCoverPage(page, validated.meta, outputDir, 1));
-    pageOffset = 1;
-    await loadArticlePage(page, html);
+    files.push(await renderCoverPage(page, validated.meta, preparedOutput.outputDir, 1));
 
-    files.push(...(await screenshotPages(page, plan, validated.meta, outputDir, pageOffset)));
+    if (!options.coverOnly) {
+      const html = await renderHtml(validated.meta, blocks);
+      await loadArticlePage(page, html);
 
-    console.log(`✓ Rendered: ${files.length} page(s)`);
-    console.log(`✓ Output: ${outputDir}`);
-    for (const file of files) {
-      console.log(`  ${basename(file)}`);
+      const measurements = await measureBlocks(page);
+      const plan = computePageBreaks(measurements);
+      files.push(...(await screenshotPages(page, plan, validated.meta, preparedOutput.outputDir, 1)));
     }
 
-    return { outputDir, files };
+    log(`✓ Rendered: ${files.length} page(s)`);
+    log(`✓ Output: ${preparedOutput.outputDir}`);
+    for (const file of files) {
+      log(`  ${basename(file)}`);
+    }
+
+    return {
+      outputMode: preparedOutput.mode,
+      outputDir: preparedOutput.outputDir,
+      files,
+      pageCount: files.length,
+      renderedCover: true,
+      renderedBody: !options.coverOnly,
+    };
   } finally {
     await page.close().catch(() => {});
     await browser.close();

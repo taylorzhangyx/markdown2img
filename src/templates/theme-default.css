@@ -258,12 +258,12 @@ body {
 }
 
 .block-paragraph.block-role-list-intro p {
-  font-family: var(--font-ui);
-  font-size: 23px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  line-height: 1.55;
-  color: #6a5f52;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: 560;
+  letter-spacing: 0;
+  line-height: 1.58;
+  color: #5e5144;
 }
 
 .block-list.block-role-list-cluster {

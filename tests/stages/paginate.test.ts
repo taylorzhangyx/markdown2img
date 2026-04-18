@@ -35,6 +35,8 @@ describe('computePageBreaks', () => {
       blockRange: { start: 0, end: 2 },
       clipY: 0,
       contentHeight: 750,
+      bodyPageNumber: 1,
+      bodyPageCount: 1,
       isFirstPage: true,
       isLastPage: true,
       hasEndMarker: true,
@@ -55,8 +57,12 @@ describe('computePageBreaks', () => {
       { start: 8, end: 16 },
       { start: 17, end: 19 },
     ]);
+    expect(plan.pages.map((page) => page.bodyPageNumber)).toEqual([1, 2, 3]);
+    expect(plan.pages.map((page) => page.bodyPageCount)).toEqual([3, 3, 3]);
     expect(plan.pages.map((page) => page.clipY)).toEqual([0, 1360, 2980]);
     expect(plan.pages.at(-1)).toMatchObject({
+      bodyPageNumber: 3,
+      bodyPageCount: 3,
       isLastPage: true,
       hasEndMarker: true,
       contentHeight: 540,
@@ -76,11 +82,15 @@ describe('computePageBreaks', () => {
     expect(plan.pages[0]).toMatchObject({
       blockRange: { start: 0, end: 0 },
       contentHeight: 1150,
+      bodyPageNumber: 1,
+      bodyPageCount: 2,
       hasEndMarker: false,
     });
     expect(plan.pages[1]).toMatchObject({
       blockRange: { start: 1, end: 2 },
       clipY: 1070,
+      bodyPageNumber: 2,
+      bodyPageCount: 2,
       isLastPage: true,
       hasEndMarker: true,
     });
@@ -96,8 +106,12 @@ describe('computePageBreaks', () => {
       blockRange: { start: 0, end: 0 },
       clipY: 0,
       contentHeight: oversizedHeight,
+      bodyPageNumber: 1,
+      bodyPageCount: 2,
     });
     expect(plan.pages.at(-1)).toMatchObject({
+      bodyPageNumber: 2,
+      bodyPageCount: 2,
       isLastPage: true,
       hasEndMarker: true,
     });
@@ -111,6 +125,8 @@ describe('computePageBreaks', () => {
     expect(plan.pages).toHaveLength(2);
     expect(plan.pages[0]).toMatchObject({
       blockRange: { start: 0, end: 0 },
+      bodyPageNumber: 1,
+      bodyPageCount: 2,
       isLastPage: false,
       hasEndMarker: false,
     });
@@ -118,6 +134,8 @@ describe('computePageBreaks', () => {
       blockRange: { start: -1, end: -1 },
       clipY: 1450,
       contentHeight: 0,
+      bodyPageNumber: 2,
+      bodyPageCount: 2,
       isLastPage: true,
       hasEndMarker: true,
     });
